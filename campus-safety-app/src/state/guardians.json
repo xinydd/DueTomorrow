@@ -1,0 +1,39 @@
+[
+  { 
+    "name": "Ahmad S.", 
+    "role": "Guardian Angel", 
+    "distance": "150m", 
+    "lat": 1.5600, 
+    "lng": 103.6385 
+  },
+  { 
+    "name": "Sarah L.", 
+    "role": "Guardian Angel", 
+    "distance": "200m", 
+    "lat": 1.5590, 
+    "lng": 103.6375 
+  },
+  { 
+    "name": "Mike R.", 
+    "role": "Guardian Angel", 
+    "distance": "250m", 
+    "lat": 1.5610, 
+    "lng": 103.6400 
+  },
+  { 
+    "name": "Lisa K.", 
+    "role": "Guardian Angel", 
+    "distance": "180m", 
+    "lat": 1.5585, 
+    "lng": 103.6380 
+  },
+  { 
+    "name": "David W.", 
+    "role": "Guardian Angel", 
+    "distance": "300m", 
+    "lat": 1.5620, 
+    "lng": 103.6395 
+  }
+]
+
+
