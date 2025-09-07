@@ -1,3 +1,11 @@
+# Track - Campus Management 
+
+# Problem Statement
+1. Unsafe isolated areas at night (parking lots, engineering blocks)
+2. Lack of real-time safety info
+3. Slow & manual incident reporting
+4. Students feel unsafe walking alone
+
 # Campus Safety App - UTM
 
 A real-time campus safety monitoring application for Universiti Teknologi Malaysia (UTM) with interactive mapping using OpenStreetMap.
