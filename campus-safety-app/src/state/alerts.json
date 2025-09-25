@@ -1,6 +1,39 @@
 [
-  { "title": "Power outage near Engineering Block", "time": "2 min ago", "level": "caution" },
-  { "title": "Fire drill at Library 3PM", "time": "1 hr ago", "level": "safe" }
+  { 
+    "title": "New incident reported at Block C", 
+    "time": "2 mins ago", 
+    "level": "safe",
+    "location": "Block C - Computer Lab",
+    "description": "Minor electrical issue resolved. All systems are now operational and safe for use."
+  },
+  { 
+    "title": "New incident reported at Block B", 
+    "time": "5 mins ago", 
+    "level": "danger",
+    "location": "Block B - Parking Area",
+    "description": "Suspicious activity reported in parking area. Security personnel have been dispatched. Please avoid the area until further notice."
+  },
+  { 
+    "title": "New incident reported at Gym", 
+    "time": "8 mins ago", 
+    "level": "safe",
+    "location": "Sports Complex - Gymnasium",
+    "description": "Equipment maintenance completed. Gym is now fully operational with all safety checks passed."
+  },
+  { 
+    "title": "Power outage near Engineering Block", 
+    "time": "15 mins ago", 
+    "level": "caution",
+    "location": "Engineering Block - Electrical Room",
+    "description": "Partial power outage affecting some classrooms. Backup generators are active. Classes in affected areas have been relocated."
+  },
+  { 
+    "title": "Fire drill at Library 3PM", 
+    "time": "1 hr ago", 
+    "level": "safe",
+    "location": "Main Library - All Floors",
+    "description": "Scheduled fire drill completed successfully. All evacuation procedures were followed correctly. Library is now open for normal operations."
+  }
 ]
 
 

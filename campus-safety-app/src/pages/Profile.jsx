@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useSecurity } from '../state/SecurityContext.jsx'
 
 import {
   User,
@@ -30,9 +31,12 @@ import {
 } from 'lucide-react'
 
 export default function Profile() {
+  const { user, logout } = useSecurity()
+  const navigate = useNavigate()
+  
   // Profile states
   const [showEditProfile, setShowEditProfile] = useState(false)
-  const [username, setUsername] = useState('Aisyah')
+  const [username, setUsername] = useState(user?.name || '')
   const [profilePic, setProfilePic] = useState(null)
 
   // Settings states
@@ -68,16 +72,9 @@ export default function Profile() {
   const [newEmail, setNewEmail] = useState('')
   const [newPhone, setNewPhone] = useState('')
 
-  const navigate = useNavigate()
-  
   const handleLogout = () => {
-    // Clear user session data
-    localStorage.removeItem('campus-safety-user')  
-
-    console.log('Logging out...')
-
-    // Redirect to login page
-    navigate('/login')  
+    logout()
+    navigate('/login')
   }
 
   const handleEditProfile = () => {
@@ -370,11 +367,11 @@ export default function Profile() {
             </div>
             <div className="flex-1">
               <h2 className={`text-xl font-bold transition-colors duration-200 ${darkMode ? 'text-white' : 'text-gray-900'
-                }`}>Aisyah</h2>
+                }`}>{user?.name || 'User'}</h2>
               <p className={`transition-colors duration-200 ${darkMode ? 'text-gray-300' : 'text-gray-600'
-                }`} data-lang="student">Student</p>
+                }`} data-lang="student">{user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1) || 'User'}</p>
               <p className={`text-sm transition-colors duration-200 ${darkMode ? 'text-gray-400' : 'text-gray-500'
-                }`}>aisyah@campus.edu</p>
+                }`}>{user?.email || 'user@campus.edu'}</p>
             </div>
           </div>
 

@@ -1,27 +1,30 @@
 import { useState, useEffect } from 'react'
-import { Camera, Flag, Route, Search, X, ChevronUp, MapPin, AlertCircle, Loader2 } from 'lucide-react'
-import MapView from '../ui/MapView.jsx'
-import { useSecurity } from '../state/SecurityContext.jsx'
-import emergencyService from '../services/emergency.js'
+import { Camera, Flag, Route, Search, X, ChevronUp, Share2 } from 'lucide-react'
+import WorkingMapView from '../ui/WorkingMapView.jsx'
+import LocationSharingService from '../services/locationSharingService'
 
 export default function Map() {
   const [showBottomPanel, setShowBottomPanel] = useState(false)
   const [selectedAction, setSelectedAction] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [mapData, setMapData] = useState({
+    nearbyGuardians: [],
+    patrols: [],
+    safetyZones: [],
+    userLocation: null
+  })
   const [isFullSafetyInfo, setIsFullSafetyInfo] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  
-  const { 
-    userLocation, 
-    nearbyGuardians, 
-    patrols, 
-    currentZone,
-    reportIncident,
-    requestEscort,
-    loading: contextLoading 
-  } = useSecurity()
+
+  useEffect(() => {
+    const handleMapDataUpdate = (event) => {
+      if (event.detail && event.detail.type === 'mapDataUpdate') {
+        setMapData(event.detail.data)
+      }
+    }
+    window.addEventListener('mapDataUpdate', handleMapDataUpdate)
+    return () => window.removeEventListener('mapDataUpdate', handleMapDataUpdate)
+  }, [])
 
   const handleActionClick = (action) => {
     setSelectedAction(action)
@@ -29,70 +32,53 @@ export default function Map() {
   }
 
   const handleConfirm = async () => {
-    if (!selectedAction) return
-    
-    setLoading(true)
-    setError('')
-    
-    try {
-      switch (selectedAction.type) {
-        case 'incident':
-          await reportIncident({
-            type: 'general',
-            description: 'Incident reported via map',
-            severity: 'medium'
-          })
-          break
-        case 'escort':
-          await requestEscort('Requested via map')
-          break
-        case 'camera':
-          // Simulate camera scan
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          break
-        default:
-          alert(selectedAction.action)
+    if (selectedAction) {
+      if (selectedAction.action === 'shareLocation') {
+        // Show location sharing options - service handles all error display
+        await LocationSharingService.showSharingOptions();
+        setShowPopup(false)
+        setSelectedAction(null)
+      } else {
+        alert(selectedAction.action)
+        setShowPopup(false)
+        setSelectedAction(null)
       }
-      
-      setShowPopup(false)
-      setSelectedAction(null)
-    } catch (error) {
-      setError(error.message || 'Action failed')
-    } finally {
-      setLoading(false)
     }
   }
 
   const actions = [
     {
+      label: 'Share Location',
+      icon: Share2,
+      description: 'Share your current location via WhatsApp, Telegram, or SMS',
+      action: 'shareLocation'
+    },
+    {
       label: 'AI Camera Scan',
       icon: Camera,
       description: 'Open phone camera to detect environment (dark alley, empty corridor, etc.)',
-      action: 'AI scan initiated! Analyzing your surroundings...',
-      type: 'camera'
+      action: 'AI scan initiated! Analyzing your surroundings...'
     },
     {
       label: 'Report Incident',
       icon: Flag,
       description: 'Quick incident report form with auto-filled location',
-      action: 'Incident reported! Security team notified of your location.',
-      type: 'incident'
+      action: 'Incident reported! Security team notified of your location.'
     },
     {
       label: 'Escort Me',
       icon: Route,
       description: 'Request a walking buddy or security escort',
-      action: 'Escort request sent! Guardian Angels and security notified.',
-      type: 'escort'
+      action: 'Escort request sent! Guardian Angels and security notified.'
     }
   ]
 
-  const displayGuardians = nearbyGuardians && nearbyGuardians.length > 0 ? nearbyGuardians : [
+  const nearbyGuardians = mapData.nearbyGuardians.length > 0 ? mapData.nearbyGuardians : [
     { name: 'Ahmad S.', distance: '150m', available: true },
     { name: 'Sarah L.', distance: '200m', available: true }
   ]
 
-  const patrolInfo = patrols.length > 0 ? patrols.map(patrol => ({
+  const patrolInfo = mapData.patrols.length > 0 ? mapData.patrols.map(patrol => ({
     location: 'Nearby',
     eta: '2-5 mins',
     officer: patrol.name
@@ -106,15 +92,6 @@ export default function Map() {
     { message: 'Low lighting detected at Engineering Block corridor', time: '15 mins ago', level: 'caution' },
     { message: 'Security patrol completed at Main Library', time: '10 mins ago', level: 'safe' }
   ]
-
-  if (contextLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full space-y-4">
-        <Loader2 size={32} className="animate-spin text-blue-600" />
-        <p className="text-gray-600">Loading map data...</p>
-      </div>
-    )
-  }
 
   return (
     <div className="relative h-full">
@@ -134,48 +111,15 @@ export default function Map() {
         </div>
       </div>
 
-      {/* Location Status */}
-      {userLocation && (
-        <div className="absolute top-16 left-4 right-4 z-10">
-          <div className="max-w-md mx-auto">
-            <div className="flex items-center gap-2 p-2 bg-white/90 backdrop-blur rounded-lg border border-gray-200">
-              <MapPin size={16} className="text-blue-600" />
-              <span className="text-sm text-gray-700">
-                Location: {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
-                {userLocation.accuracy && ` (±${Math.round(userLocation.accuracy)}m)`}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error Display */}
-      {error && (
-        <div className="absolute top-20 left-4 right-4 z-10">
-          <div className="max-w-md mx-auto">
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle size={16} className="text-red-600" />
-              <span className="text-red-600 text-sm">{error}</span>
-              <button
-                onClick={() => setError('')}
-                className="ml-auto text-red-600 hover:text-red-800"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Map View */}
       <div className="relative z-10">
         <div className={`${showBottomPanel ? 'pointer-events-none' : 'pointer-events-auto'}`}>
-          <MapView />
+          <WorkingMapView />
         </div>
       </div>
 
-      {/* Floating Action Buttons */}
-      <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-30">
+      {/* Floating Action Buttons - Moved 224.5cm to the left, 2cm down */}
+      <div className="fixed right-[575px] top-[calc(50%+8px)] transform -translate-y-1/2 z-30">
         <div className="flex flex-col gap-3">
           {actions.map((action) => (
             <button
@@ -191,7 +135,7 @@ export default function Map() {
       </div>
 
       {/* Bottom Panel Handle */}
-      {!showBottomPanel && !isFullSafetyInfo && (
+      {!showBottomPanel && !isFullSafetyInfo && !showPopup && (
         <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[60]">
           <button
             onClick={() => setShowBottomPanel(true)}
@@ -260,8 +204,8 @@ export default function Map() {
             <div className="space-y-6">
               <div className="bg-blue-50 p-4 rounded-xl">
                 <h3 className="font-semibold text-blue-800">Nearest Guardian Angels</h3>
-                {displayGuardians.map((g, idx) => (
-                  <p key={idx} className="text-blue-600">{g.name} - {g.distanceText || g.distance} away</p>
+                {nearbyGuardians.map((g, idx) => (
+                  <p key={idx} className="text-blue-600">{g.name} - {g.distance} away</p>
                 ))}
               </div>
               <div className="bg-green-50 p-4 rounded-xl">
@@ -305,24 +249,15 @@ export default function Map() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPopup(false)}
-                disabled={loading}
-                className="flex-1 py-2 px-4 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="flex-1 py-2 px-4 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirm}
-                disabled={loading}
-                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
               >
-                {loading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Confirm'
-                )}
+                Confirm
               </button>
             </div>
           </div>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Simulation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .log { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin: 10px 0; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🎭 Simple Simulation Test</h1>
+    
+    <div class="status info">
+        <strong>Status:</strong> <span id="status">Testing...</span>
+    </div>
+    
+    <button onclick="testConnection()">Test Backend Connection</button>
+    <button onclick="clearLog()">Clear Log</button>
+    
+    <div class="log" id="log">
+        <div class="info">🚀 Simple Test Started</div>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+
+        function addLog(message, type = 'info') {
+            const event = document.createElement('div');
+            event.className = type;
+            event.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(event);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function clearLog() {
+            log.innerHTML = '<div class="info">🚀 Log Cleared</div>';
+        }
+
+        async function testConnection() {
+            try {
+                addLog('Testing backend connection...', 'info');
+                const response = await fetch('http://localhost:3000/health');
+                const data = await response.json();
+                
+                if (data.success) {
+                    status.textContent = `✅ Backend Connected: ${data.message}`;
+                    addLog(`✅ Backend Health: ${data.message}`, 'success');
+                    addLog(`📊 Timestamp: ${data.timestamp}`, 'info');
+                    addLog(`🌍 Environment: ${data.environment}`, 'info');
+                } else {
+                    status.textContent = '❌ Backend Error';
+                    addLog(`❌ Backend Error: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                status.textContent = '❌ Connection Failed';
+                addLog(`❌ Connection Failed: ${error.message}`, 'error');
+                addLog(`💡 Make sure backend is running on port 3000`, 'info');
+            }
+        }
+
+        // Auto-test on load
+        testConnection();
+        
+        // Test every 10 seconds
+        setInterval(testConnection, 10000);
+    </script>
+</body>
+</html>

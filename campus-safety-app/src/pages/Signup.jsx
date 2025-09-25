@@ -1,15 +1,43 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useSecurity } from '../state/SecurityContext.jsx'
 
 export default function Signup() {
   const navigate = useNavigate()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const { signup } = useSecurity()
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'student'
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSignup = (e) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    // Clear error when user starts typing
+    if (error) setError('')
+  }
+
+  const handleSignup = async (e) => {
     e.preventDefault()
-    navigate('/home')
+    setIsLoading(true)
+    setError('')
+
+    try {
+      await signup(formData)
+      navigate('/home')
+    } catch (error) {
+      setError(error.message || 'Signup failed. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleLogin = () => {
@@ -81,13 +109,22 @@ export default function Signup() {
         </div>
 
         <form onSubmit={handleSignup} className="space-y-6">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
+
           <div>
             <input
               className="w-full px-4 py-3 bg-amber-50 border-0 rounded-xl text-green-800 placeholder-green-600 focus:outline-none focus:ring-2 focus:ring-green-600"
               type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              name="name"
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
             />
           </div>
           
@@ -95,9 +132,11 @@ export default function Signup() {
             <input
               className="w-full px-4 py-3 bg-amber-50 border-0 rounded-xl text-green-800 placeholder-green-600 focus:outline-none focus:ring-2 focus:ring-green-600"
               type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              placeholder="Email Address"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
             />
           </div>
 
@@ -105,17 +144,50 @@ export default function Signup() {
             <input
               className="w-full px-4 py-3 bg-amber-50 border-0 rounded-xl text-green-800 placeholder-green-600 focus:outline-none focus:ring-2 focus:ring-green-600"
               type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
+              placeholder="Password (min 6 characters)"
+              value={formData.password}
+              onChange={handleInputChange}
+              minLength="6"
+              required
             />
           </div>
 
+          {/* Role Selection */}
+          <div>
+            <label className="block text-green-800 text-sm font-medium mb-2">
+              Select Your Role
+            </label>
+            <div className="space-y-2">
+              {[
+                { value: 'student', label: 'Student', description: 'Report incidents and request help' },
+                { value: 'staff', label: 'Staff', description: 'View reports and assist students' },
+                { value: 'security', label: 'Security', description: 'Manage alerts and respond to emergencies' }
+              ].map((role) => (
+                <label key={role.value} className="flex items-start space-x-3 p-3 bg-amber-50 rounded-xl cursor-pointer hover:bg-amber-100 transition-colors">
+                  <input
+                    type="radio"
+                    name="role"
+                    value={role.value}
+                    checked={formData.role === role.value}
+                    onChange={handleInputChange}
+                    className="mt-1 text-blue-800 focus:ring-blue-600"
+                  />
+                  <div className="flex-1">
+                    <div className="text-green-800 font-medium">{role.label}</div>
+                    <div className="text-green-600 text-sm">{role.description}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <button 
-            className="w-full bg-blue-800 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+            className="w-full bg-blue-800 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             type="submit"
+            disabled={isLoading}
           >
-            Sign Up
+            {isLoading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
 

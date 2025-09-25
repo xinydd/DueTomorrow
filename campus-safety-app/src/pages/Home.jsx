@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { MapPin, Users, Route, AlertTriangle, Wifi, WifiOff, RefreshCw, AlertCircle } from 'lucide-react'
+import { MapPin, Users, Route, AlertTriangle, Shield, FileText, Share2 } from 'lucide-react'
 import { useSecurity } from '../state/SecurityContext.jsx'
 import SafetyBanner from '../ui/SafetyBanner.jsx'
 import SOSButton from '../ui/SOSButton.jsx'
 import QuickActions from '../ui/QuickActions.jsx'
 import InfoCard from '../ui/InfoCard.jsx'
+import LocationSharingService from '../services/locationSharingService'
 
 export default function Home() {
   const { 
@@ -14,103 +15,118 @@ export default function Home() {
     nearbyGuardians, 
     patrols, 
     lastUpdated,
-    loading,
-    error,
-    userLocation,
-    currentZone,
-    isOnline,
-    clearError,
-    refreshData
+    refreshData,
+    user,
+    hasRole,
+    hasAnyRole
   } = useSecurity()
 
-  // Show loading state
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <RefreshCw size={32} className="animate-spin text-blue-600" />
-        <p className="text-gray-600">Loading security data...</p>
-      </div>
-    )
+  const [refreshingSection, setRefreshingSection] = useState(null)
+
+  const handleRefresh = async (section) => {
+    setRefreshingSection(section)
+    try {
+      // Simulate fetching new data
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // Generate new random data
+      if (section === 'alerts') {
+        // Add new random alert
+        const newAlert = {
+          id: Date.now(),
+          title: `New incident reported near ${['Library', 'Engineering Block', 'Parking Lot', 'Cafeteria'][Math.floor(Math.random() * 4)]}`,
+          time: 'just now',
+          level: ['safe', 'caution', 'danger'][Math.floor(Math.random() * 3)]
+        }
+        console.log('New alert added:', newAlert)
+      } else if (section === 'guardians') {
+        // Update guardian positions
+        console.log('Guardian positions updated')
+      } else if (section === 'routes') {
+        // Update route suggestions
+        console.log('Route suggestions updated')
+      }
+      
+      if (refreshData) {
+        await refreshData()
+      }
+    } catch (error) {
+      console.error('Refresh failed:', error)
+    } finally {
+      setRefreshingSection(null)
+    }
+  }
+
+  const handleViewAll = (section) => {
+    console.log(`View all ${section} clicked`)
+    // This will trigger the expanded view modal in InfoCard
+  }
+
+  const getRoleBasedContent = () => {
+    if (hasRole('student')) {
+      return (
+        <>
+          <SafetyBanner status={securityStatus} />
+          
+          <div className="grid place-items-center">
+            <SOSButton />
+            
+            {/* Quick Location Sharing Button */}
+            <button
+              onClick={async () => {
+                // Service handles all error display
+                await LocationSharingService.showSharingOptions();
+              }}
+              className="mt-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+            >
+              <Share2 size={16} />
+              <span>Share Location</span>
+            </button>
+          </div>
+          
+          <QuickActions />
+        </>
+      )
+    }
+
+    if (hasRole('staff')) {
+      return (
+        <>
+          <SafetyBanner status={securityStatus} />
+          
+          <div className="grid place-items-center">
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <Shield className="w-8 h-8 text-green-600 mx-auto mb-2" />
+              <h3 className="text-lg font-semibold text-green-800">Staff Dashboard</h3>
+              <p className="text-green-600 text-sm">Monitor reports and assist students</p>
+            </div>
+          </div>
+        </>
+      )
+    }
+
+    if (hasRole('security')) {
+      return (
+        <>
+          <SafetyBanner status={securityStatus} />
+          
+          <div className="grid place-items-center">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+              <Shield className="w-8 h-8 text-red-600 mx-auto mb-2" />
+              <h3 className="text-lg font-semibold text-red-800">Security Dashboard</h3>
+              <p className="text-red-600 text-sm">Manage alerts and respond to emergencies</p>
+            </div>
+          </div>
+        </>
+      )
+    }
+
+    return null
   }
 
   return (
     <div className="space-y-4">
-      {/* Mobile-Optimized Connection Status */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {isOnline ? (
-            <Wifi size={14} className="sm:w-4 sm:h-4 text-green-600" />
-          ) : (
-            <WifiOff size={14} className="sm:w-4 sm:h-4 text-red-600" />
-          )}
-          <span className={`text-xs sm:text-sm ${isOnline ? 'text-green-600' : 'text-red-600'}`}>
-            {isOnline ? 'Online' : 'Offline'}
-          </span>
-        </div>
-        
-        {userLocation && (
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <MapPin size={10} className="sm:w-3 sm:h-3" />
-            <span className="hidden sm:inline">Location: {userLocation.accuracy ? `±${Math.round(userLocation.accuracy)}m` : 'Unknown'}</span>
-            <span className="sm:hidden">{userLocation.accuracy ? `±${Math.round(userLocation.accuracy)}m` : 'Unknown'}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Mobile-Optimized Error Display */}
-      {error && (
-        <div className="flex items-start sm:items-center justify-between p-3 bg-red-50 border border-red-200 rounded-xl">
-          <div className="flex items-start sm:items-center gap-2 flex-1 min-w-0">
-            <AlertCircle size={14} className="sm:w-4 sm:h-4 text-red-600 flex-shrink-0 mt-0.5 sm:mt-0" />
-            <span className="text-red-600 text-xs sm:text-sm break-words">{error}</span>
-          </div>
-          <button
-            onClick={clearError}
-            className="text-red-600 hover:text-red-800 p-1 -m-1 touch-manipulation flex-shrink-0"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* Mobile-Optimized Current Zone Info */}
-      {currentZone && (
-        <div className={`p-3 rounded-xl border ${
-          currentZone.level === 'safe' ? 'bg-green-50 border-green-200' :
-          currentZone.level === 'caution' ? 'bg-yellow-50 border-yellow-200' :
-          'bg-red-50 border-red-200'
-        }`}>
-          <div className="flex items-center gap-2">
-            <MapPin size={14} className={`sm:w-4 sm:h-4 ${
-              currentZone.level === 'safe' ? 'text-green-600' :
-              currentZone.level === 'caution' ? 'text-yellow-600' :
-              'text-red-600'
-            }`} />
-            <span className={`font-medium text-sm sm:text-base ${
-              currentZone.level === 'safe' ? 'text-green-800' :
-              currentZone.level === 'caution' ? 'text-yellow-800' :
-              'text-red-800'
-            }`}>
-              {currentZone.name}
-            </span>
-          </div>
-          <p className={`text-xs sm:text-sm mt-1 break-words ${
-            currentZone.level === 'safe' ? 'text-green-700' :
-            currentZone.level === 'caution' ? 'text-yellow-700' :
-            'text-red-700'
-          }`}>
-            {currentZone.description}
-          </p>
-        </div>
-      )}
-
-      <SafetyBanner status={securityStatus} />
-      
-      <div className="grid place-items-center">
-        <SOSButton />
-      </div>
-      
-      <QuickActions />
+      {getRoleBasedContent()}
 
       <div className="grid gap-3">
         <InfoCard 
@@ -120,31 +136,42 @@ export default function Home() {
             subtitle: a.time,
             badge: a.level,
             icon: AlertTriangle,
-            description: a.description || `Security alert reported at ${a.location || 'campus location'}`
+            location: a.location || 'Campus Area',
+            time: a.time,
+            description: a.description || `Security incident reported at ${a.location || 'campus area'}. Please exercise caution and report any suspicious activity to campus security.`,
+            severity: a.level
           }))} 
           isLive={true}
           lastUpdated={lastUpdated}
-          onRefresh={refreshData}
+          onRefresh={() => handleRefresh('alerts')}
+          onViewAll={() => handleViewAll('alerts')}
         />
 
         <InfoCard 
           title="Guardian Angels Nearby" 
           items={nearbyGuardians.length > 0 ? nearbyGuardians.map(g => ({
             title: g.name,
-            subtitle: g.distanceText || g.distance,
+            subtitle: g.distance,
             badge: g.role,
             icon: Users,
-            description: g.available ? 'Available for assistance' : 'Currently busy'
+            distance: g.distance,
+            description: `${g.name} is a ${g.role} available to help with campus safety. They are currently ${g.distance} away and can provide assistance with walking companions, emergency situations, or general safety concerns.`,
+            status: 'Available now',
+            contact: g.phone || 'Contact via app'
           })) : guardians.map(g => ({
             title: g.name,
             subtitle: g.distance,
             badge: g.role,
             icon: Users,
-            description: g.available ? 'Available for assistance' : 'Currently busy'
+            distance: g.distance,
+            description: `${g.name} is a ${g.role} available to help with campus safety. They are currently ${g.distance} away and can provide assistance with walking companions, emergency situations, or general safety concerns.`,
+            status: 'Available now',
+            contact: g.phone || 'Contact via app'
           }))} 
           isLive={true}
           lastUpdated={lastUpdated}
-          onRefresh={refreshData}
+          onRefresh={() => handleRefresh('guardians')}
+          onViewAll={() => handleViewAll('guardians')}
         />
 
         <InfoCard 
@@ -155,53 +182,37 @@ export default function Home() {
               subtitle: '10 min • well-lit • security cameras', 
               badge: 'safe',
               icon: Route,
-              description: 'Recommended route with maximum safety features and lighting'
+              distance: '0.8 km',
+              duration: '10 minutes',
+              description: 'This route is well-lit with security cameras throughout. It passes through the main campus plaza and includes emergency call boxes at regular intervals. Recommended for evening travel.',
+              features: ['Well-lit path', 'Security cameras', 'Emergency call boxes', 'Main campus area']
             },
             { 
               title: 'Gym → Parking P2', 
               subtitle: '8 min • caution • low lighting', 
               badge: 'caution',
               icon: Route,
-              description: 'Use caution due to limited lighting in some areas'
+              distance: '0.6 km',
+              duration: '8 minutes',
+              description: 'This route has some areas with lower lighting. While generally safe, it\'s recommended to travel with a companion during evening hours. Emergency call boxes are available.',
+              features: ['Some low lighting', 'Emergency call boxes', 'Companion recommended', 'Evening caution']
             },
             { 
               title: 'Cafeteria → Study Hall', 
               subtitle: '5 min • safe • busy area', 
               badge: 'safe',
               icon: Route,
-              description: 'High foot traffic area with good visibility'
-            },
-            { 
-              title: 'Engineering Block → Main Gate', 
-              subtitle: '12 min • safe • well-patrolled', 
-              badge: 'safe',
-              icon: Route,
-              description: 'Regular security patrols and emergency call boxes available'
-            },
-            { 
-              title: 'Student Center → Library', 
-              subtitle: '7 min • caution • construction zone', 
-              badge: 'caution',
-              icon: Route,
-              description: 'Temporary detour due to ongoing construction work'
+              distance: '0.4 km',
+              duration: '5 minutes',
+              description: 'Short and safe route through a busy campus area. This path is well-traveled and has good lighting. Perfect for quick trips between buildings.',
+              features: ['Busy area', 'Good lighting', 'Short distance', 'Well-traveled path']
             }
           ]} 
           isLive={true}
           lastUpdated={lastUpdated}
-          onRefresh={refreshData}
+          onRefresh={() => handleRefresh('routes')}
+          onViewAll={() => handleViewAll('routes')}
         />
-      </div>
-
-      {/* Mobile-Optimized Refresh Button */}
-      <div className="flex justify-center pt-4">
-        <button
-          onClick={refreshData}
-          className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 touch-manipulation"
-        >
-          <RefreshCw size={14} className="sm:w-4 sm:h-4" />
-          <span className="hidden sm:inline">Refresh Data</span>
-          <span className="sm:hidden">Refresh</span>
-        </button>
       </div>
     </div>
   )

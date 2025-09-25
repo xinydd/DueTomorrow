@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Share2, Route, Flag, X } from 'lucide-react'
+import LocationSharingService from '../services/locationSharingService'
 
 const actions = [
   { 
     label: 'Share Live Location', 
     icon: Share2,
-    description: 'Share your current location with friends or security personnel',
-    action: 'Location shared successfully!'
+    description: 'Share your current location via WhatsApp, Telegram, or SMS',
+    action: 'shareLocation'
   },
   { 
     label: 'Request Escort', 
@@ -31,11 +32,18 @@ export default function QuickActions() {
     setShowPopup(true)
   }
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (selectedAction) {
-      alert(selectedAction.action)
-      setShowPopup(false)
-      setSelectedAction(null)
+      if (selectedAction.action === 'shareLocation') {
+        // Show location sharing options - service handles all error display
+        await LocationSharingService.showSharingOptions();
+        setShowPopup(false)
+        setSelectedAction(null)
+      } else {
+        alert(selectedAction.action)
+        setShowPopup(false)
+        setSelectedAction(null)
+      }
     }
   }
 

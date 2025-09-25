@@ -17,8 +17,6 @@ A real-time campus safety monitoring application for Universiti Teknologi Malays
 - **Security Patrol ETA** and live positions
 - **Safety Zone Overlays** on the map
 
-
-
 ### 📱 Interactive Features
 - **AI Camera Scan** for environment detection
 - **Quick Incident Reporting** with auto-location
