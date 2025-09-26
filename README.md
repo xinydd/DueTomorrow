@@ -499,4 +499,4 @@ The app will open at `http://localhost:5174`
 
 ## Support
 
-For technical support or feature requests, please contact the development team.
+For technical support or feature requests, please contact the development team. 
