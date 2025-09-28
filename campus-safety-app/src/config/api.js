@@ -3,7 +3,7 @@
 
 export const API_CONFIG = {
   // Backend API Base URL
-  BASE_URL: "https://duetomorrow.onrender.com",
+  BASE_URL: "https://duetomorrow.onrender.com/api",
   
   // Google Maps API Key
   // Get your key from: https://console.cloud.google.com/google/maps-apis
