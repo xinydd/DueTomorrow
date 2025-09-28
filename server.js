@@ -60,7 +60,7 @@ app.use(helmet({
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-frontend-domain.com'] // Replace with your frontend domain
+    ? ['https://duetomorrow-1.onrender.com'] // Replace with your frontend domain
     : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'null'], // Allow local file access
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
