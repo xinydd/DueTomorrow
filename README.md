@@ -1,3 +1,13 @@
+# Deployed link - https://duetomorrow-1.onrender.com/
+
+# Track - Campus Management 
+
+# Problem Statement
+1. Unsafe isolated areas at night (parking lots, engineering blocks)
+2. Lack of real-time safety info
+3. Slow & manual incident reporting
+4. Students feel unsafe walking alone
+
 # Campus Safety Backend API
 
 A comprehensive Node.js + Express backend for a Campus Safety App with real-time SOS alerts and incident reporting.
