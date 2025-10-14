@@ -28,13 +28,13 @@ export default function SafetyBanner({ status = 'safe' }) {
           <div className="flex items-center gap-2 mb-2">
             <span className="text-2xl">{ui.icon}</span>
             <div>
-              <div className="text-sm font-medium">Campus Safety Status</div>
-              <div className="text-lg font-bold">{ui.label}</div>
+              <div className="text-base md:text-lg font-semibold">HeySafe! Status</div>
+              <div className="text-xl md:text-2xl font-bold">{ui.label}</div>
             </div>
           </div>
-          <div className="text-sm opacity-90">{ui.message}</div>
+          <div className="text-sm md:text-base opacity-90">{ui.message}</div>
         </div>
-        <div className="text-xs opacity-70 ml-2">Live</div>
+        <div className="text-sm md:text-base opacity-70 ml-2">Live</div>
       </div>
     </div>
   )

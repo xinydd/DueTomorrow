@@ -1,7 +1,7 @@
 {
-  "name": "campus-safety-backend",
+  "name": "heysafe-backend",
   "version": "1.0.0",
-  "description": "Backend for Campus Safety App with real-time SOS alerts and incident reporting",
+  "description": "Backend for HeySafe! with real-time SOS alerts and incident reporting",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -1,4 +1,4 @@
-# Campus Safety App - UTM
+# HeySafe! - UTM Campus Safety
 
 A real-time campus safety monitoring application for Universiti Teknologi Malaysia (UTM) with interactive mapping using OpenStreetMap.
 

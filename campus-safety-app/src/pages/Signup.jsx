@@ -82,8 +82,8 @@ export default function Signup() {
             <span className="text-xs font-bold text-white bg-blue-800 px-2 py-1 rounded-full">DueTomorrow</span>
           </div>
         </div>
-        <h1 className="text-2xl font-bold text-blue-800">
-          Campus Safety App
+        <h1 className="text-3xl md:text-4xl font-bold text-blue-800">
+          HeySafe!
         </h1>
       </div>
 

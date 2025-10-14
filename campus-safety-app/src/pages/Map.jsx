@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Camera, Flag, Route, Search, X, ChevronUp, Share2 } from 'lucide-react'
-import WorkingMapView from '../ui/WorkingMapView.jsx'
+import SimpleMapView from '../ui/SimpleMapView.jsx'
 import LocationSharingService from '../services/locationSharingService'
 
 export default function Map() {
@@ -114,12 +114,12 @@ export default function Map() {
       {/* Map View */}
       <div className="relative z-10">
         <div className={`${showBottomPanel ? 'pointer-events-none' : 'pointer-events-auto'}`}>
-          <WorkingMapView />
+          <SimpleMapView />
         </div>
       </div>
 
-      {/* Floating Action Buttons - Moved 224.5cm to the left, 2cm down */}
-      <div className="fixed right-[575px] top-[calc(50%+8px)] transform -translate-y-1/2 z-30">
+      {/* Floating Action Buttons - aligned to map's right edge */}
+      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-30">
         <div className="flex flex-col gap-3">
           {actions.map((action) => (
             <button

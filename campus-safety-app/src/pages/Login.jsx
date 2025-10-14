@@ -69,8 +69,8 @@ export default function Login() {
 
       {/* App Title */}
       <div className="text-center pt-8 pb-4 bg-amber-50">
-        <h1 className="text-2xl font-bold text-blue-800">
-          Campus Safety App
+        <h1 className="text-3xl md:text-4xl font-bold text-blue-800">
+          HeySafe!
         </h1>
       </div>
 

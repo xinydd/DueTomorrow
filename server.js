@@ -60,7 +60,7 @@ app.use(helmet({
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://duetomorrow-1.onrender.com'] // Replace with your frontend domain
+    ? ['https://your-frontend-domain.com'] // Replace with your frontend domain
     : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'null'], // Allow local file access
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -102,11 +102,27 @@ const connectDB = async () => {
 // Connect to MongoDB
 connectDB();
 
+// Optionally create demo accounts on startup (default true in development)
+const enableDemoAccounts = (
+  process.env.DEMO_ACCOUNTS === 'true' ||
+  (process.env.NODE_ENV !== 'production' && process.env.DEMO_ACCOUNTS !== 'false')
+);
+if (enableDemoAccounts) {
+  (async () => {
+    try {
+      await createDemoAccounts();
+      console.log('✅ Demo accounts enabled');
+    } catch (e) {
+      console.log('⚠️ Failed to initialize demo accounts:', e.message);
+    }
+  })();
+}
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
     success: true,
-    message: 'Campus Safety API is running',
+    message: 'HeySafe! API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0'
@@ -185,7 +201,7 @@ process.on('SIGINT', () => {
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`🚀 Campus Safety API server running on port ${PORT}`);
+  console.log(`🚀 HeySafe! API server running on port ${PORT}`);
   console.log(`📡 Socket.IO server is ready`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);

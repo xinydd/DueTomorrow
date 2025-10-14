@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Shield, Users, AlertTriangle, Route, Navigation, Wifi, WifiOff, Building, Phone } from 'lucide-react'
 import zones from '../state/zones.json'
 import guardians from '../state/guardians.json'
@@ -16,6 +16,7 @@ const UTM_BOUNDS = {
 
 export default function WorkingMapView() {
   const mapRef = useRef(null)
+  const mapInstanceRef = useRef(null)
   const [map, setMap] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [userLocation, setUserLocation] = useState(UTM_CENTER)
@@ -33,143 +34,131 @@ export default function WorkingMapView() {
   const [mapError, setMapError] = useState(null)
   const [showLegend, setShowLegend] = useState(false)
   const [showLiveAlerts, setShowLiveAlerts] = useState(false)
+  const [mapKey, setMapKey] = useState(0) // Key to force map re-render
 
-  // Initialize Leaflet Map (reliable fallback)
+  // Get user location first
   useEffect(() => {
-    let isMounted = true
-    
-    const initMap = async () => {
-      if (!map && mapRef.current && isMounted) {
+    const getCurrentLocation = async () => {
+      if (navigator.geolocation) {
         try {
-          setIsLoading(true)
-          setMapError(null)
-
-          // Import Leaflet CSS first
-          if (!document.querySelector('#leaflet-css')) {
-            const link = document.createElement('link')
-            link.id = 'leaflet-css'
-            link.rel = 'stylesheet'
-            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-            document.head.appendChild(link)
+          const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 5000,
+              maximumAge: 0
+            })
+          })
+          
+          const newLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
           }
-
-          // Wait for CSS to load
-          await new Promise(resolve => setTimeout(resolve, 500))
-
-          // Dynamically import Leaflet
-          const L = await import('leaflet')
-
-          // Fix default markers
-          delete L.Icon.Default.prototype._getIconUrl
-          L.Icon.Default.mergeOptions({
-            iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-          })
-
-          // Ensure the map container is ready
-          if (!mapRef.current || !isMounted) {
-            throw new Error('Map container not ready')
-          }
-
-          // Create map
-          const newMap = L.map(mapRef.current, {
-            center: [UTM_CENTER.lat, UTM_CENTER.lng],
-            zoom: 17,
-            zoomControl: false,
-            attributionControl: false
-          })
-
-          // Add OpenStreetMap tiles with error handling and fallbacks
-          const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19,
-            errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-            subdomains: ['a', 'b', 'c']
-          })
-          
-          // Add fallback tile layers
-          const fallbackTiles = [
-            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            'https://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png?apikey=your-api-key'
-          ]
-          
-          tileLayer.addTo(newMap)
-          
-          // Handle tile loading errors
-          tileLayer.on('tileerror', (e) => {
-            console.warn('Tile loading error, trying fallback:', e)
-          })
-
-          // Set map bounds to UTM area
-          const bounds = L.latLngBounds([
-            [UTM_BOUNDS.south, UTM_BOUNDS.west],
-            [UTM_BOUNDS.north, UTM_BOUNDS.east]
-          ])
-          newMap.fitBounds(bounds, { padding: [20, 20] })
-
-          // Add zoom control to top right
-          L.control.zoom({ position: 'topright' }).addTo(newMap)
-          
-          if (isMounted) {
-            setMap(newMap)
-            setIsLoading(false)
-            console.log('Map initialized successfully')
-          }
+          setUserLocation(newLocation)
+          console.log('Live location obtained:', newLocation)
         } catch (error) {
-          console.error('Failed to initialize map:', error)
-          if (isMounted) {
-            // Try to create a simple offline map as fallback
-            try {
-              const L = await import('leaflet')
-              const simpleMap = L.map(mapRef.current, {
-                center: [UTM_CENTER.lat, UTM_CENTER.lng],
-                zoom: 17,
-                zoomControl: false,
-                attributionControl: false
-              })
-              
-              // Create a simple colored background as fallback
-              const canvas = document.createElement('canvas')
-              canvas.width = 400
-              canvas.height = 400
-              const ctx = canvas.getContext('2d')
-              ctx.fillStyle = '#f0f8ff'
-              ctx.fillRect(0, 0, 400, 400)
-              ctx.fillStyle = '#87ceeb'
-              ctx.fillRect(50, 50, 300, 300)
-              ctx.fillStyle = '#000'
-              ctx.font = '16px Arial'
-              ctx.textAlign = 'center'
-              ctx.fillText('Campus Map (Offline)', 200, 200)
-              
-              const imageUrl = canvas.toDataURL()
-              L.imageOverlay(imageUrl, [[UTM_BOUNDS.south, UTM_BOUNDS.west], [UTM_BOUNDS.north, UTM_BOUNDS.east]]).addTo(simpleMap)
-              
-              setMap(simpleMap)
-              setIsLoading(false)
-              console.log('Offline fallback map created')
-            } catch (fallbackError) {
-              console.error('Fallback map also failed:', fallbackError)
-              setMapError(`Failed to load map: ${error.message}. Please check your internet connection.`)
-              setIsLoading(false)
-            }
-          }
+          console.log('Using fallback location:', UTM_CENTER)
+          setUserLocation(UTM_CENTER)
         }
       }
     }
 
-    // Add a small delay to ensure the component is fully mounted
-    const timer = setTimeout(initMap, 100)
+    getCurrentLocation()
+  }, [])
 
+  // Initialize map with unique key approach
+  const initializeMap = useCallback(async () => {
+    if (!mapRef.current) return
+
+    try {
+      setIsLoading(true)
+      setMapError(null)
+
+      // Import Leaflet CSS
+      if (!document.querySelector('#leaflet-css')) {
+        const link = document.createElement('link')
+        link.id = 'leaflet-css'
+        link.rel = 'stylesheet'
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+        document.head.appendChild(link)
+      }
+
+      // Wait for CSS to load
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      // Import Leaflet
+      const L = await import('leaflet')
+
+      // Fix default markers
+      delete L.Icon.Default.prototype._getIconUrl
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+      })
+
+      // Create map with current user location
+      const newMap = L.map(mapRef.current, {
+        center: [userLocation.lat, userLocation.lng],
+        zoom: 18,
+        zoomControl: false,
+        attributionControl: false
+      })
+
+      // Store map instance
+      mapInstanceRef.current = newMap
+      setMap(newMap)
+
+      // Add user location marker
+      const userIcon = L.divIcon({
+        className: 'user-marker',
+        html: '<div class="w-6 h-6 bg-blue-600 rounded-full border-3 border-white shadow-lg animate-pulse"></div>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      })
+      
+      L.marker([userLocation.lat, userLocation.lng], {
+        icon: userIcon,
+        title: 'Your Live Location'
+      }).addTo(newMap)
+
+      // Add tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(newMap)
+
+      // Add zoom control
+      L.control.zoom({ position: 'topright' }).addTo(newMap)
+      
+      setIsLoading(false)
+      console.log('Map initialized successfully')
+    } catch (error) {
+      console.error('Map initialization failed:', error)
+      setMapError(`Failed to load map: ${error.message}`)
+      setIsLoading(false)
+    }
+  }, [userLocation])
+
+  // Initialize map when user location is ready
+  useEffect(() => {
+    if (userLocation.lat !== UTM_CENTER.lat || userLocation.lng !== UTM_CENTER.lng) {
+      initializeMap()
+    }
+  }, [userLocation, initializeMap])
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      isMounted = false
-      clearTimeout(timer)
-      if (map) {
-        map.remove()
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove()
+        } catch (error) {
+          console.log('Map cleanup error:', error)
+        }
+        mapInstanceRef.current = null
       }
     }
-  }, []) // Remove map dependency to prevent infinite loop
+  }, [])
 
   // Get user's real-time location
   useEffect(() => {
@@ -614,14 +603,15 @@ export default function WorkingMapView() {
 
   return (
     <div className="relative w-full h-[70vh] rounded-2xl overflow-hidden">
-      <div ref={mapRef} className="w-full h-full" />
+      <div key={mapKey} ref={mapRef} className="w-full h-full bg-blue-50" />
       
       {/* Loading Indicator */}
       {isLoading && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur flex items-center justify-center z-[1000]">
           <div className="text-center">
             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            <p className="text-sm text-gray-600">Loading Live Campus Map...</p>
+            <p className="text-sm text-gray-600">Getting Your Live Location...</p>
+            <p className="text-xs text-gray-500 mt-1">Please allow location access</p>
           </div>
         </div>
       )}
@@ -636,87 +626,35 @@ export default function WorkingMapView() {
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Map Loading Error</h3>
             <p className="text-sm text-gray-600 mb-4">{mapError}</p>
             <button
-              onClick={async () => {
+              onClick={() => {
+                // Reset all map state
                 setMapError(null)
-                setMap(null)
                 setIsLoading(true)
                 
-                // Force reinitialize the map
-                try {
-                  // Clear any existing Leaflet CSS
-                  const existingCSS = document.querySelector('#leaflet-css')
-                  if (existingCSS) {
-                    existingCSS.remove()
+                // Clean up existing map
+                if (mapInstanceRef.current) {
+                  try {
+                    mapInstanceRef.current.remove()
+                  } catch (error) {
+                    console.log('Map cleanup error:', error)
                   }
-                  
-                  // Wait a moment before retrying
-                  await new Promise(resolve => setTimeout(resolve, 500))
-                  
-                  // Reinitialize map
-                  const initMap = async () => {
-                    try {
-                      // Import Leaflet CSS
-                      const link = document.createElement('link')
-                      link.id = 'leaflet-css'
-                      link.rel = 'stylesheet'
-                      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-                      document.head.appendChild(link)
-
-                      // Wait for CSS to load
-                      await new Promise(resolve => setTimeout(resolve, 500))
-
-                      // Dynamically import Leaflet
-                      const L = await import('leaflet')
-
-                      // Fix default markers
-                      delete L.Icon.Default.prototype._getIconUrl
-                      L.Icon.Default.mergeOptions({
-                        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-                        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                      })
-
-                      // Create map
-                      const newMap = L.map(mapRef.current, {
-                        center: [UTM_CENTER.lat, UTM_CENTER.lng],
-                        zoom: 17,
-                        zoomControl: false,
-                        attributionControl: false
-                      })
-
-                      // Add OpenStreetMap tiles
-                      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors',
-                        maxZoom: 19,
-                        errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-                      }).addTo(newMap)
-
-                      // Set map bounds
-                      const bounds = L.latLngBounds([
-                        [UTM_BOUNDS.south, UTM_BOUNDS.west],
-                        [UTM_BOUNDS.north, UTM_BOUNDS.east]
-                      ])
-                      newMap.fitBounds(bounds, { padding: [20, 20] })
-
-                      // Add zoom control
-                      L.control.zoom({ position: 'topright' }).addTo(newMap)
-                      
-                      setMap(newMap)
-                      setIsLoading(false)
-                      console.log('Map retry successful')
-                    } catch (error) {
-                      console.error('Map retry failed:', error)
-                      setMapError(`Retry failed: ${error.message}`)
-                      setIsLoading(false)
-                    }
-                  }
-                  
-                  await initMap()
-                } catch (error) {
-                  console.error('Retry initialization failed:', error)
-                  setMapError(`Retry failed: ${error.message}`)
-                  setIsLoading(false)
+                  mapInstanceRef.current = null
                 }
+                setMap(null)
+                
+                // Force re-render by changing key
+                setMapKey(prev => prev + 1)
+                
+                // Clear any existing Leaflet CSS
+                const existingCSS = document.querySelector('#leaflet-css')
+                if (existingCSS) {
+                  existingCSS.remove()
+                }
+                
+                // Retry initialization after a short delay
+                setTimeout(() => {
+                  initializeMap()
+                }, 100)
               }}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
             >

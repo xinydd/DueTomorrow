@@ -10,14 +10,16 @@ class UserService {
     try {
       // Try MongoDB first
       if (mongoose.connection.readyState === 1) {
-        return await User.findOne({ email });
+        const dbUser = await User.findOne({ email });
+        if (dbUser) return dbUser;
       }
     } catch (error) {
       console.log('MongoDB not available, using demo accounts');
     }
     
-    // Fallback to demo accounts
-    return users.get(email) || null;
+    // Always attempt fallback to demo accounts if available
+    const demoUser = users.get(email) || null;
+    return demoUser;
   }
 
   // Find user by ID
