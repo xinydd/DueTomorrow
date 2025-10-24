@@ -1,6 +1,5 @@
 import React from 'react'
 import { Shield } from 'lucide-react'
-import logoImage from '/assets/heysafe-logo.png'
 
 const HeySafeLogo = ({ size = 'default', showSubtitle = true, className = '' }) => {
   const getSizeClasses = () => {
@@ -33,7 +32,7 @@ const HeySafeLogo = ({ size = 'default', showSubtitle = true, className = '' }) 
       {/* Logo Image */}
       <div className={`${sizes.container} mb-2 flex items-center justify-center`}>
         <img 
-          src={logoImage} 
+          src="/assets/heysafe-logo.png"  
           alt="HeySafe! Campus Management System"
           className="w-full h-full object-contain"
           onError={(e) => {
