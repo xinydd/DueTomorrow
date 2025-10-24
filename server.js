@@ -68,7 +68,7 @@ app.use(helmet({
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://duetomorrow-1.onrender.com/'] // Replace with your frontend domain
+    ? ['https://duetomorrow-1.onrender.com'] // Replace with your frontend domain
     : [
         'http://localhost:3000', 
         'http://localhost:3001', 
