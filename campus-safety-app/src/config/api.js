@@ -2,9 +2,9 @@
 // Note: Replace these with your actual API keys
 
 export const API_CONFIG = {
-  // Backend API Base URL - Auto-detect mobile vs desktop
+  // Backend API Base URL - Auto-detect local vs production
   BASE_URL: window.location.hostname === 'localhost' 
-    ? "http://localhost:3000/api"
+    ? "http://localhost:4000/api"
     : "https://duetomorrow.onrender.com/api",
   
   // Google Maps API Key
