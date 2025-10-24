@@ -1,4 +1,5 @@
 import React from 'react'
+import logoImage from '../assets/heysafe-logo.png'
 
 const HeySafeLogo = ({ size = 'default', showSubtitle = true, className = '' }) => {
   const getSizeClasses = () => {
@@ -31,7 +32,7 @@ const HeySafeLogo = ({ size = 'default', showSubtitle = true, className = '' }) 
       {/* Logo Image */}
       <div className={`${sizes.container} mb-2`}>
         <img 
-          src="/assets/heysafe-logo.png" 
+          src={logoImage} 
           alt="HeySafe! Campus Management System"
           className="w-full h-full object-contain"
         />
