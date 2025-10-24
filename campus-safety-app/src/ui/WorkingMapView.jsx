@@ -738,7 +738,7 @@ export default function WorkingMapView() {
       {/* Map Legend Toggle Button */}
       <button
         onClick={() => setShowLegend(!showLegend)}
-        className="absolute bottom-4 left-4 z-[1000] w-10 h-10 bg-white/90 backdrop-blur rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-white transition-all duration-200"
+        className="absolute bottom-20 left-4 z-[1000] w-10 h-10 bg-white/90 backdrop-blur rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-white transition-all duration-200"
         title={showLegend ? "Hide Legend" : "Show Legend"}
       >
         <span className="text-lg font-bold text-gray-700">?</span>
@@ -746,7 +746,7 @@ export default function WorkingMapView() {
 
       {/* Map Legend */}
       {showLegend && (
-        <div className="absolute bottom-4 left-16 bg-white/90 backdrop-blur rounded-lg p-3 text-xs z-[1000] shadow-lg border border-gray-200">
+        <div className="absolute bottom-20 left-16 bg-white/90 backdrop-blur rounded-lg p-3 text-xs z-[1000] shadow-lg border border-gray-200">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-600 rounded-full"></div>

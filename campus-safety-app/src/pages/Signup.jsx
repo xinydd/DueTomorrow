@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSecurity } from '../state/SecurityContext.jsx'
+import HeySafeLogo from '../components/HeySafeLogo.jsx'
 
 export default function Signup() {
   const navigate = useNavigate()
@@ -62,29 +63,7 @@ export default function Signup() {
 
       {/* Logo Section */}
       <div className="text-center pt-8 pb-4 bg-amber-50">
-        <div className="relative mx-auto w-24 h-24 mb-4">
-          {/* Logo Circle */}
-          <div className="w-24 h-24 bg-blue-800 rounded-full flex items-center justify-center relative">
-            {/* Shield with Wings */}
-            <div className="relative">
-              {/* Left Wing */}
-              <div className="absolute -left-6 -top-2 w-8 h-6 bg-blue-400 rounded-l-full transform -rotate-12"></div>
-              {/* Right Wing */}
-              <div className="absolute -right-6 -top-2 w-8 h-6 bg-blue-400 rounded-r-full transform rotate-12"></div>
-              {/* Shield */}
-              <div className="w-8 h-10 bg-blue-300 rounded-t-lg flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded-sm"></div>
-              </div>
-            </div>
-          </div>
-          {/* DueTomorrow Text */}
-          <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-            <span className="text-xs font-bold text-white bg-blue-800 px-2 py-1 rounded-full">DueTomorrow</span>
-          </div>
-        </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-blue-800">
-          HeySafe!
-        </h1>
+        <HeySafeLogo size="large" showSubtitle={true} />
       </div>
 
        {/* Torn Paper Edge */}

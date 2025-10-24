@@ -622,7 +622,7 @@ export default function LiveMapView() {
       </button>
 
       {/* Map Legend */}
-      <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg p-3 text-xs z-[1000] shadow-lg border border-gray-200">
+      <div className="absolute bottom-20 left-4 bg-white/90 backdrop-blur rounded-lg p-3 text-xs z-[1000] shadow-lg border border-gray-200">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
@@ -1291,7 +1291,7 @@ export default function LiveMapView() {
 
       {/* Map Legend */}
 
-      <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg p-3 text-xs z-[1000] shadow-lg border border-gray-200">
+      <div className="absolute bottom-20 left-4 bg-white/90 backdrop-blur rounded-lg p-3 text-xs z-[1000] shadow-lg border border-gray-200">
 
         <div className="space-y-2">
 

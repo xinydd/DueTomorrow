@@ -3,6 +3,7 @@ import { Home as HomeIcon, Map as MapIcon, Bell, User, LogOut } from 'lucide-rea
 import { useEffect } from 'react'
 import { useSecurity } from '../state/SecurityContext.jsx'
 import RoleBasedNavigation from '../components/RoleBasedNavigation.jsx'
+import HeySafeLogo from '../components/HeySafeLogo.jsx'
 
 export default function AppLayout() {
   const navigate = useNavigate()
@@ -51,8 +52,8 @@ export default function AppLayout() {
     <div className="min-h-dvh max-w-md mx-auto flex flex-col bg-gradient-to-b from-amber-50 to-teal-100">
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-green-200">
         <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="font-semibold text-green-800">Campus Safety</div>
+          <div className="flex items-center space-x-3">
+            <HeySafeLogo size="small" showSubtitle={false} />
             {user && (
               <div className={`text-xs px-2 py-1 rounded-full bg-amber-100 ${getRoleColor(user.role)}`}>
                 {getRoleDisplayName(user.role)}

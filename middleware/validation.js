@@ -54,6 +54,14 @@ const validateLogin = (req, res, next) => {
 };
 
 const validateLocation = (req, res, next) => {
+  // Support both formats: { lat, lng } and { location: { lat, lng } }
+  if (req.body && req.body.location && typeof req.body.location === 'object') {
+    const { lat, lng } = req.body.location
+    // Normalize into root-level fields for downstream middleware/controllers
+    if (lat !== undefined) req.body.lat = lat
+    if (lng !== undefined) req.body.lng = lng
+  }
+
   const { lat, lng } = req.body;
   const errors = [];
 
@@ -82,7 +90,7 @@ const validateIncidentReport = (req, res, next) => {
 
   const validTypes = [
     'harassment', 'theft', 'suspicious_activity', 'vandalism',
-    'assault', 'cyber_bullying', 'drug_activity', 'other'
+    'assault', 'cyber_bullying', 'drug_activity', 'accident', 'other'
   ];
 
   if (!type || !validTypes.includes(type)) {

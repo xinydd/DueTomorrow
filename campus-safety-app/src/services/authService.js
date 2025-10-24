@@ -149,7 +149,10 @@ class AuthService {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Request failed')
+        const error = new Error(data.message || 'Request failed')
+        error.response = response
+        error.data = data
+        throw error
       }
 
       return data

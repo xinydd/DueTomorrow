@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Share2, Route, Flag, X } from 'lucide-react'
 import LocationSharingService from '../services/locationSharingService'
+import ReportIncidentModal from '../components/ReportIncidentModal'
+import Toast from '../components/Toast'
 
 const actions = [
   { 
@@ -26,10 +28,18 @@ const actions = [
 export default function QuickActions() {
   const [selectedAction, setSelectedAction] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState('success')
+  const [showToast, setShowToast] = useState(false)
 
   const handleActionClick = (action) => {
-    setSelectedAction(action)
-    setShowPopup(true)
+    if (action.label === 'Report Incident') {
+      setShowReportModal(true)
+    } else {
+      setSelectedAction(action)
+      setShowPopup(true)
+    }
   }
 
   const handleConfirm = async () => {
@@ -45,6 +55,16 @@ export default function QuickActions() {
         setSelectedAction(null)
       }
     }
+  }
+
+  const handleReportSuccess = (message) => {
+    setToastMessage(message)
+    setToastType(message.includes('✅') ? 'success' : 'error')
+    setShowToast(true)
+  }
+
+  const handleToastClose = () => {
+    setShowToast(false)
   }
 
   return (
@@ -102,6 +122,21 @@ export default function QuickActions() {
           </div>
         </div>
       )}
+
+      {/* Report Incident Modal */}
+      <ReportIncidentModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onSuccess={handleReportSuccess}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        isVisible={showToast}
+        onClose={handleToastClose}
+      />
     </>
   )
 }

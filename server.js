@@ -13,6 +13,7 @@ const sosRoutes = require('./routes/sos');
 const reportRoutes = require('./routes/reports');
 const analyticsRoutes = require('./routes/analytics');
 const adminRoutes = require('./routes/admin');
+const aiAnalysisRoutes = require('./routes/ai-analysis');
 
 // Import middleware
 const { generalLimiter } = require('./middleware/rateLimiter');
@@ -30,8 +31,15 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production' 
-      ? ['https://duetomorrow-1.onrender.com'] // Replace with your frontend domain
-      : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'null'], // Allow local file access
+      ? ['https://duetomorrow.onrender.com'] // Replace with your frontend domain
+      : [
+          'http://localhost:3000', 
+          'http://localhost:3001', 
+          'http://localhost:5173',
+          'http://192.168.1.205:3000',
+          'http://192.168.1.205:5173',
+          'null'
+        ], // Allow local file access and mobile connections
     methods: ['GET', 'POST'],
     credentials: true
   },
@@ -60,8 +68,18 @@ app.use(helmet({
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://duetomorrow-1.onrender.com'] // Replace with your frontend domain
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'null'], // Allow local file access
+    ? ['https://duetomorrow.onrender.com'] // Replace with your frontend domain
+    : [
+        'http://localhost:3000', 
+        'http://localhost:3001', 
+        'http://localhost:5173', 
+        'http://localhost:5174',
+        'http://localhost:5175',
+        'http://localhost:5176',
+        'http://192.168.1.205:3000',
+        'http://192.168.1.205:5173',
+        'null'
+      ], // Allow local file access and mobile connections
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -135,6 +153,7 @@ app.use('/api/sos', sosRoutes);
 app.use('/api', reportRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', aiAnalysisRoutes);
 
 // Socket.IO connection status endpoint
 app.get('/api/status', (req, res) => {

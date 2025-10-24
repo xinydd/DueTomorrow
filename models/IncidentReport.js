@@ -17,6 +17,7 @@ const incidentReportSchema = new mongoose.Schema({
       'assault',
       'cyber_bullying',
       'drug_activity',
+      'accident',
       'other'
     ]
   },

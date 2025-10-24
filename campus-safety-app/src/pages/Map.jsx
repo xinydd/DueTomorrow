@@ -2,12 +2,20 @@ import { useState, useEffect } from 'react'
 import { Camera, Flag, Route, Search, X, ChevronUp, Share2 } from 'lucide-react'
 import SimpleMapView from '../ui/SimpleMapView.jsx'
 import LocationSharingService from '../services/locationSharingService'
+import AICameraScanMobile from '../components/AICameraScanMobile.jsx'
+import ReportIncidentModal from '../components/ReportIncidentModal.jsx'
+import Toast from '../components/Toast.jsx'
 
 export default function Map() {
   const [showBottomPanel, setShowBottomPanel] = useState(false)
   const [selectedAction, setSelectedAction] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
+  const [showAICamera, setShowAICamera] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState('success')
+  const [showToast, setShowToast] = useState(false)
   const [mapData, setMapData] = useState({
     nearbyGuardians: [],
     patrols: [],
@@ -27,8 +35,14 @@ export default function Map() {
   }, [])
 
   const handleActionClick = (action) => {
-    setSelectedAction(action)
-    setShowPopup(true)
+    if (action.action === 'aiCameraScan') {
+      setShowAICamera(true)
+    } else if (action.label === 'Report Incident') {
+      setShowReportModal(true)
+    } else {
+      setSelectedAction(action)
+      setShowPopup(true)
+    }
   }
 
   const handleConfirm = async () => {
@@ -46,6 +60,58 @@ export default function Map() {
     }
   }
 
+  const handleReportSuccess = (message) => {
+    setToastMessage(message)
+    setToastType(message.includes('✅') ? 'success' : 'error')
+    setShowToast(true)
+  }
+
+  const handleToastClose = () => {
+    setShowToast(false)
+  }
+
+  const handleAIAnalysisComplete = async (result) => {
+    // Handle the AI analysis result
+    console.log('AI Analysis Result:', result)
+    
+    // Send analysis to backend
+    try {
+      const apiUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/api/ai-analysis'
+        : 'http://192.168.1.205:3000/api/ai-analysis'
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: 'current-user', // In real app, get from auth context
+          location: null, // Could get from GPS
+          analysisResult: result,
+          safetyScore: result.safetyScore,
+          recommendations: result.recommendations,
+          timestamp: result.timestamp
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Analysis stored successfully:', data);
+        
+        if (data.data.alertTriggered) {
+          alert(`🚨 Low safety score detected: ${result.safetyScore}/100. Security team has been notified.`)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to store analysis:', error);
+      // Still show local alert even if backend fails
+      if (result.safetyScore < 60) {
+        alert(`⚠️ Low safety score detected: ${result.safetyScore}/100. Consider requesting assistance.`)
+      }
+    }
+  }
+
   const actions = [
     {
       label: 'Share Location',
@@ -57,7 +123,7 @@ export default function Map() {
       label: 'AI Camera Scan',
       icon: Camera,
       description: 'Open phone camera to detect environment (dark alley, empty corridor, etc.)',
-      action: 'AI scan initiated! Analyzing your surroundings...'
+      action: 'aiCameraScan'
     },
     {
       label: 'Report Incident',
@@ -263,6 +329,28 @@ export default function Map() {
           </div>
         </div>
       )}
+
+      {/* AI Camera Scan Modal - Mobile Optimized with OpenCV.js */}
+      <AICameraScanMobile
+        isOpen={showAICamera}
+        onClose={() => setShowAICamera(false)}
+        onAnalysisComplete={handleAIAnalysisComplete}
+      />
+
+      {/* Report Incident Modal */}
+      <ReportIncidentModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onSuccess={handleReportSuccess}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        isVisible={showToast}
+        onClose={handleToastClose}
+      />
     </div>
   )
 }

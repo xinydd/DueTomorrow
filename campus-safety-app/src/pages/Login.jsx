@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSecurity } from '../state/SecurityContext.jsx'
+import HeySafeLogo from '../components/HeySafeLogo.jsx'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -69,9 +70,7 @@ export default function Login() {
 
       {/* App Title */}
       <div className="text-center pt-8 pb-4 bg-amber-50">
-        <h1 className="text-3xl md:text-4xl font-bold text-blue-800">
-          HeySafe!
-        </h1>
+        <HeySafeLogo size="large" showSubtitle={true} />
       </div>
 
       {/* Torn Paper Edge */}

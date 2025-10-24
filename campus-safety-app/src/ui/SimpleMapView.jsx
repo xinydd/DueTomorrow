@@ -354,7 +354,7 @@ export default function SimpleMapView() {
       
       {/* Live Location Status - Only show when map is loaded */}
       {userLocation && !isLoading && (
-        <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur rounded-lg p-2 text-xs shadow-lg border border-gray-200">
+        <div className="absolute bottom-10 left-4 z-[1000] bg-white/90 backdrop-blur rounded-lg p-2 text-xs shadow-lg border border-gray-200">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
             <span className="text-gray-700">Live Location Active</span>
@@ -366,7 +366,7 @@ export default function SimpleMapView() {
       {userLocation && !isLoading && (
         <button
           onClick={() => setShowLegend(!showLegend)}
-          className="absolute bottom-16 left-4 z-[1000] w-10 h-10 bg-white/90 backdrop-blur rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-white transition-all duration-200"
+          className="absolute bottom-20 left-4 z-[1000] w-10 h-10 bg-white/90 backdrop-blur rounded-full shadow-lg border border-gray-200 flex items-center justify-center hover:bg-white transition-all duration-200"
           title={showLegend ? "Hide Legend" : "Show Legend"}
         >
           <span className="text-lg font-bold text-gray-700">?</span>
@@ -375,7 +375,7 @@ export default function SimpleMapView() {
 
       {/* Legend Panel */}
       {showLegend && userLocation && !isLoading && (
-        <div className="absolute bottom-16 left-16 bg-white/95 backdrop-blur rounded-lg p-4 text-xs z-[1000] shadow-lg border border-gray-200 max-w-[250px]">
+        <div className="absolute bottom-20 left-16 bg-white/95 backdrop-blur rounded-lg p-4 text-xs z-[1000] shadow-lg border border-gray-200 max-w-[250px]">
           <h4 className="text-sm font-semibold text-gray-800 mb-3">Safety Zone Legend</h4>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
