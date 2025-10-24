@@ -1,4 +1,6 @@
 import React from 'react'
+import { Shield } from 'lucide-react'
+import logoImage from '/assets/heysafe-logo.png'
 
 const HeySafeLogo = ({ size = 'default', showSubtitle = true, className = '' }) => {
   const getSizeClasses = () => {
@@ -29,12 +31,25 @@ const HeySafeLogo = ({ size = 'default', showSubtitle = true, className = '' }) 
   return (
     <div className={`flex flex-col items-center ${className}`}>
       {/* Logo Image */}
-      <div className={`${sizes.container} mb-2`}>
+      <div className={`${sizes.container} mb-2 flex items-center justify-center`}>
         <img 
-          src="/assets/heysafe-logo.png" 
+          src={logoImage} 
           alt="HeySafe! Campus Management System"
           className="w-full h-full object-contain"
+          onError={(e) => {
+            console.log('Logo failed to load, using fallback');
+            e.target.style.display = 'none';
+            // Show fallback icon
+            const fallbackIcon = e.target.nextElementSibling;
+            if (fallbackIcon) {
+              fallbackIcon.style.display = 'flex';
+            }
+          }}
         />
+        {/* Fallback Icon */}
+        <div className="w-full h-full flex items-center justify-center bg-blue-100 rounded-full" style={{display: 'none'}}>
+          <Shield className="w-3/4 h-3/4 text-blue-600" />
+        </div>
       </div>
 
       {/* Text - Only show if showSubtitle is true */}
