@@ -4,7 +4,7 @@
 export const API_CONFIG = {
   // Backend API Base URL - Auto-detect mobile vs desktop
   BASE_URL: window.location.hostname === 'localhost' 
-    ? "http://localhost:3000/api"
+    ? "https://duetomorrow.onrender.com/api"
     : "http://192.168.1.205:3000/api",
   
   // Google Maps API Key
