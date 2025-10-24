@@ -31,7 +31,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production' 
-      ? ['https://duetomorrow-1.onrender.com/'] // Replace with your frontend domain
+      ? ['https://duetomorrow-1.onrender.com'] // Replace with your frontend domain
       : [
           'http://localhost:3000', 
           'http://localhost:3001', 
