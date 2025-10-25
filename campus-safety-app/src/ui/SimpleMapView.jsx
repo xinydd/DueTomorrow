@@ -85,51 +85,62 @@ export default function SimpleMapView() {
     weather: [{ description: 'clear sky' }]
   })
   const [mapError, setMapError] = useState(null)
-  const [locationStatus, setLocationStatus] = useState('requesting') // requesting, success, failed
+  const [locationStatus, setLocationStatus] = useState('idle') // idle, requesting, success, failed
   const [showLegend, setShowLegend] = useState(false)
+  const [hasRequestedPermission, setHasRequestedPermission] = useState(false)
 
-  // Get user's live location first
-  useEffect(() => {
-    const getCurrentLocation = async () => {
-      if (navigator.geolocation) {
-        try {
-          setLocationStatus('requesting')
-          console.log('Requesting location permission...')
-          const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              enableHighAccuracy: true,
-              timeout: 15000, // Increased timeout
-              maximumAge: 0
-            })
+  // Function to request location permission
+  const requestLocationPermission = async () => {
+    if (navigator.geolocation) {
+      try {
+        setLocationStatus('requesting')
+        setHasRequestedPermission(true)
+        console.log('Requesting location permission...')
+        const position = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 15000, // Increased timeout
+            maximumAge: 0
           })
-          
-          const newLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          }
-          setUserLocation(newLocation)
-          setLocationStatus('success')
-          console.log('✅ Live location obtained:', newLocation)
-          console.log('📍 Location accuracy:', position.coords.accuracy, 'meters')
-        } catch (error) {
-          console.error('❌ Location error:', error.message)
-          setLocationStatus('failed')
-          if (error.code === 1) {
-            console.log('🚫 Location permission denied by user')
-          } else if (error.code === 2) {
-            console.log('📍 Location unavailable')
-          } else if (error.code === 3) {
-            console.log('⏱️ Location request timeout')
-          }
-          // Don't set any fallback location - keep loading state
+        })
+        
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
         }
-      } else {
-        console.log('Geolocation not supported')
+        setUserLocation(newLocation)
+        setLocationStatus('success')
+        console.log('✅ Live location obtained:', newLocation)
+        console.log('📍 Location accuracy:', position.coords.accuracy, 'meters')
+      } catch (error) {
+        console.error('❌ Location error:', error.message)
         setLocationStatus('failed')
+        if (error.code === 1) {
+          console.log('🚫 Location permission denied by user')
+        } else if (error.code === 2) {
+          console.log('📍 Location unavailable')
+        } else if (error.code === 3) {
+          console.log('⏱️ Location request timeout')
+        }
+        // Don't set any fallback location - keep loading state
       }
+    } else {
+      console.log('Geolocation not supported')
+      setLocationStatus('failed')
     }
+  }
 
-    getCurrentLocation()
+  // Try to get location on initial load (may not work on mobile without user interaction)
+  useEffect(() => {
+    // On mobile browsers, geolocation may require user interaction
+    // So we'll wait a moment and if permission hasn't been requested, show a button
+    const timer = setTimeout(() => {
+      if (locationStatus === 'idle' && !hasRequestedPermission) {
+        console.log('No location permission yet - waiting for user interaction')
+      }
+    }, 1000)
+    
+    return () => clearTimeout(timer)
   }, [])
 
   // Initialize map only when we have user location
@@ -280,24 +291,58 @@ export default function SimpleMapView() {
       {/* Loading Indicator */}
       {(!userLocation || isLoading) && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur flex items-center justify-center z-[1000]">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <div className="text-center max-w-sm px-6">
+            {locationStatus === 'idle' && (
+              <>
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Navigation className="w-8 h-8 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Enable Location Access</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  We need your location to show your position on the map and provide safety features.
+                </p>
+                <button
+                  onClick={requestLocationPermission}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 active:scale-95 transition-all duration-200 shadow-lg"
+                >
+                  Enable Location Access
+                </button>
+                <p className="text-xs text-gray-500 mt-3">
+                  Your location data stays on your device and is not shared
+                </p>
+              </>
+            )}
             {locationStatus === 'requesting' && (
               <>
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                 <p className="text-sm text-gray-600">Getting Your Live Location...</p>
-                <p className="text-xs text-gray-500 mt-1">Please allow location access</p>
+                <p className="text-xs text-gray-500 mt-1">Please allow location access in the browser prompt</p>
               </>
             )}
             {locationStatus === 'failed' && (
               <>
-                <p className="text-sm text-red-600">Location Access Required</p>
-                <p className="text-xs text-gray-500 mt-1">Please enable location access in your browser</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
-                >
-                  Retry
-                </button>
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="w-8 h-8 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Location Access Required</h3>
+                <p className="text-sm text-gray-600 mb-2">
+                  {!hasRequestedPermission 
+                    ? "Please enable location access to use this feature."
+                    : "Location permission denied. Please enable it in your browser settings."}
+                </p>
+                <div className="space-y-2 mt-4">
+                  <button
+                    onClick={requestLocationPermission}
+                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 active:scale-95 transition-all duration-200"
+                  >
+                    Try Again
+                  </button>
+                  {navigator.userAgent.match(/iPhone|iPad|iPod|Android/i) && (
+                    <p className="text-xs text-gray-500 mt-3">
+                      On mobile: Check browser settings → Site Settings → Location → Allow
+                    </p>
+                  )}
+                </div>
               </>
             )}
           </div>
