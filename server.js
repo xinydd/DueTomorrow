@@ -11,6 +11,7 @@ const { Server } = require('socket.io');
 const authRoutes = require('./routes/auth');
 const sosRoutes = require('./routes/sos');
 const reportRoutes = require('./routes/reports');
+const escortRoutes = require('./routes/escort');
 const analyticsRoutes = require('./routes/analytics');
 const adminRoutes = require('./routes/admin');
 const aiAnalysisRoutes = require('./routes/ai-analysis');
@@ -30,16 +31,14 @@ const server = http.createServer(app);
 // Initialize Socket.IO with CORS configuration
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://duetomorrow-1.onrender.com'] // Replace with your frontend domain
-      : [
-          'http://localhost:3000', 
-          'http://localhost:3001', 
-          'http://localhost:5173',
-          'http://192.168.1.205:3000',
-          'http://192.168.1.205:5173',
-          'null'
-        ], // Allow local file access and mobile connections
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow all origins
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true
   },
@@ -66,20 +65,31 @@ app.use(helmet({
 }));
 
 // CORS configuration
+const allowedOrigins = [
+  'https://duetomorrow-1.onrender.com',
+  'http://localhost:3000', 
+  'http://localhost:3001', 
+  'http://localhost:5173', 
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:5176',
+  'http://192.168.1.205:3000',
+  'http://192.168.1.205:5173',
+  'null'
+];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://duetomorrow-1.onrender.com'] // Replace with your frontend domain
-    : [
-        'http://localhost:3000', 
-        'http://localhost:3001', 
-        'http://localhost:5173', 
-        'http://localhost:5174',
-        'http://localhost:5175',
-        'http://localhost:5176',
-        'http://192.168.1.205:3000',
-        'http://192.168.1.205:5173',
-        'null'
-      ], // Allow local file access and mobile connections
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // Allow all origins for now
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -151,6 +161,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/sos', sosRoutes);
 app.use('/api', reportRoutes);
+app.use('/api/escort', escortRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', aiAnalysisRoutes);

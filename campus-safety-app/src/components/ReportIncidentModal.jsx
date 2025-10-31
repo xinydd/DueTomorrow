@@ -99,7 +99,7 @@ const ReportIncidentModal = ({ isOpen, onClose, onSuccess }) => {
     setIsSubmitting(true)
   
     try {
-      const response = await authService.authenticatedRequest('/api/report', {
+      const response = await authService.authenticatedRequest('/report', {
         method: 'POST',
         body: JSON.stringify({
           type: formData.type,
@@ -144,6 +144,7 @@ const ReportIncidentModal = ({ isOpen, onClose, onSuccess }) => {
             401: 'Unauthorized: Please log in again',
             403: 'Forbidden: Only students can submit reports',
             400: 'Invalid data: Please check your input',
+            404: 'API endpoint not found. Please check server configuration.',
             500: 'Server error: Could not save report',
             503: 'Service unavailable: Please try again later'
           }
@@ -183,8 +184,8 @@ const ReportIncidentModal = ({ isOpen, onClose, onSuccess }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 my-4 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">

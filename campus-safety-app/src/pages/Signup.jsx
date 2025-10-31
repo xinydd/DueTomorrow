@@ -132,32 +132,30 @@ export default function Signup() {
             />
           </div>
 
-          {/* Role Selection */}
+          {/* Role Selection (students only) */}
           <div>
             <label className="block text-green-800 text-sm font-medium mb-2">
-              Select Your Role
+              Account Type
             </label>
             <div className="space-y-2">
-              {[
-                { value: 'student', label: 'Student', description: 'Report incidents and request help' },
-                { value: 'staff', label: 'Staff', description: 'View reports and assist students' },
-                { value: 'security', label: 'Security', description: 'Manage alerts and respond to emergencies' }
-              ].map((role) => (
-                <label key={role.value} className="flex items-start space-x-3 p-3 bg-amber-50 rounded-xl cursor-pointer hover:bg-amber-100 transition-colors">
-                  <input
-                    type="radio"
-                    name="role"
-                    value={role.value}
-                    checked={formData.role === role.value}
-                    onChange={handleInputChange}
-                    className="mt-1 text-blue-800 focus:ring-blue-600"
-                  />
-                  <div className="flex-1">
-                    <div className="text-green-800 font-medium">{role.label}</div>
-                    <div className="text-green-600 text-sm">{role.description}</div>
-                  </div>
-                </label>
-              ))}
+              <label className="flex items-start space-x-3 p-3 bg-amber-50 rounded-xl">
+                <input
+                  type="radio"
+                  name="role"
+                  value="student"
+                  checked={true}
+                  readOnly
+                  className="mt-1 text-blue-800"
+                />
+                <div className="flex-1">
+                  <div className="text-green-800 font-medium">Student</div>
+                  <div className="text-green-600 text-sm">Report incidents and request help</div>
+                </div>
+              </label>
+              <div className="text-[13px] text-green-700">
+                Staff and Security accounts are created by administrators. Please use
+                the Login page with your assigned credentials.
+              </div>
             </div>
           </div>
 

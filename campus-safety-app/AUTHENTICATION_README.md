@@ -6,7 +6,7 @@ The Campus Safety App now includes a comprehensive role-based authentication sys
 ## Features
 
 ### 🔐 Authentication
-- **Signup**: Users can create accounts with role selection
+- **Signup**: Students can create accounts. Staff/Security are admin-created (login-only)
 - **Login**: Secure authentication with JWT tokens
 - **Role-based Access Control**: Different permissions for each role
 - **Protected Routes**: Automatic redirection based on authentication status
@@ -62,12 +62,11 @@ The Campus Safety App now includes a comprehensive role-based authentication sys
 
 ## Usage
 
-### Signup Process
-1. User fills out signup form with name, email, password
-2. User selects role (Student, Staff, or Security)
-3. Form validates input and sends to backend
-4. Backend creates user and returns JWT token
-5. User is automatically logged in and redirected
+### Signup Process (Students Only)
+1. Student fills out signup form with name, email, password
+2. Role is fixed to Student
+3. Backend creates user and returns JWT token
+4. User is automatically logged in and redirected
 
 ### Login Process
 1. User enters email and password
@@ -110,15 +109,23 @@ To test the authentication system:
 
 3. **Test different roles**:
    - Sign up as a Student and test SOS features
-   - Sign up as Staff and test report viewing
-   - Sign up as Security and test alert management
+   - Log in as Staff using preset credentials to test report viewing
+   - Log in as Security using preset credentials to test alert management
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/signup` - Create new user account
+- `POST /api/auth/signup` - Create new Student account
 - `POST /api/auth/login` - Authenticate user
 - `POST /api/auth/profile` - Get user profile
+
+## Demo Credentials
+
+- Staff: `sarah@staff.edu` / `staff123`
+- Security: `mike@security.edu` / `security123`
+- Student (example): `ahmad@student.edu` / `student123`
+
+To customize, update `create-demo-accounts.js` in the backend and restart the server.
 
 ### Role-based Endpoints
 - `POST /api/sos` - Create SOS alert (Students only)

@@ -37,24 +37,24 @@ export default function InfoCard({ title, items = [], isLive = true, lastUpdated
 
   return (
     <div className="card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold">{title}</h3>
+      <div className="flex items-start justify-between mb-3 gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <h3 className="font-semibold truncate">{title}</h3>
           {isLive && (
-            <div className="flex items-center gap-1 text-xs text-green-600">
+            <div className="flex items-center gap-1 text-xs text-green-600 whitespace-nowrap">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span>Live</span>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-xs text-gray-500">
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1 text-xs text-gray-500 whitespace-nowrap">
             <Clock size={12} />
             <span>{lastUpdated}</span>
           </div>
           <button 
             onClick={handleViewAll}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
           >
             {showExpandedView ? 'Show less' : 'View all'}
           </button>

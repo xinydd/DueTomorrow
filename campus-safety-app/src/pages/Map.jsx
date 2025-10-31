@@ -5,6 +5,7 @@ import LocationSharingService from '../services/locationSharingService'
 import AICameraScanMobile from '../components/AICameraScanMobile.jsx'
 import ReportIncidentModal from '../components/ReportIncidentModal.jsx'
 import Toast from '../components/Toast.jsx'
+import authService from '../services/authService'
 
 export default function Map() {
   const [showBottomPanel, setShowBottomPanel] = useState(false)
@@ -23,6 +24,8 @@ export default function Map() {
     userLocation: null
   })
   const [isFullSafetyInfo, setIsFullSafetyInfo] = useState(false)
+  const [destination, setDestination] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     const handleMapDataUpdate = (event) => {
@@ -52,10 +55,46 @@ export default function Map() {
         await LocationSharingService.showSharingOptions();
         setShowPopup(false)
         setSelectedAction(null)
+        setDestination('')
       } else {
-        alert(selectedAction.action)
-        setShowPopup(false)
-        setSelectedAction(null)
+        // Escort flow
+        if (selectedAction.label === 'Escort Me') {
+          try {
+            if (!destination.trim()) {
+              setToastMessage('Please enter your destination')
+              setToastType('error')
+              setShowToast(true)
+              return
+            }
+            setSubmitting(true)
+            const loc = await LocationSharingService.getCurrentLocation()
+            await authService.authenticatedRequest('/escort/request', {
+              method: 'POST',
+              body: JSON.stringify({
+                destination: destination.trim(),
+                location: { lat: loc.lat, lng: loc.lng }
+              })
+            })
+            setToastMessage('Escort request sent! Guardians notified.')
+            setToastType('success')
+            setShowToast(true)
+            setShowPopup(false)
+            setSelectedAction(null)
+            setDestination('')
+          } catch (error) {
+            console.error('Escort request failed:', error)
+            setToastMessage(error?.data?.message || 'Failed to send escort request')
+            setToastType('error')
+            setShowToast(true)
+          } finally {
+            setSubmitting(false)
+          }
+        } else {
+          alert(selectedAction.action)
+          setShowPopup(false)
+          setSelectedAction(null)
+          setDestination('')
+        }
       }
     }
   }
@@ -250,10 +289,10 @@ export default function Map() {
       )}
 
 
-      {/* Full Page Safety Info */}
+      {/* Full Safety Info Modal Popup */}
       {isFullSafetyInfo && (
-        <div className="fixed inset-0 bg-white z-40 overflow-y-auto">
-          <div className="p-6 max-w-lg mx-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9997] p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-800">Full Safety Information</h2>
               <button
@@ -267,33 +306,73 @@ export default function Map() {
               </button>
             </div>
 
-            <div className="space-y-6">
-              <div className="bg-blue-50 p-4 rounded-xl">
-                <h3 className="font-semibold text-blue-800">Nearest Guardian Angels</h3>
-                {nearbyGuardians.map((g, idx) => (
-                  <p key={idx} className="text-blue-600">{g.name} - {g.distance} away</p>
-                ))}
+            <div className="space-y-4">
+              {/* Nearest Guardian Angels */}
+              <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                  <span>🛡️</span>
+                  Nearest Guardian Angels
+                </h3>
+                <div className="space-y-2">
+                  {nearbyGuardians.map((g, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-white p-2 rounded-lg">
+                      <span className="text-blue-700 font-medium">{g.name}</span>
+                      <span className="text-blue-600 text-sm">{g.distance} away</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="bg-green-50 p-4 rounded-xl">
-                <h3 className="font-semibold text-green-800">Patrol ETA</h3>
-                {patrolInfo.map((p, idx) => (
-                  <p key={idx} className="text-green-600">{p.location} - {p.eta}</p>
-                ))}
+
+              {/* Patrol ETA */}
+              <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                <h3 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                  <span>🚔</span>
+                  Patrol ETA
+                </h3>
+                <div className="space-y-2">
+                  {patrolInfo.map((p, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-white p-2 rounded-lg">
+                      <span className="text-green-700 font-medium">{p.location}</span>
+                      <span className="text-green-600 text-sm">{p.eta} • {p.officer}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="bg-yellow-50 p-4 rounded-xl">
-                <h3 className="font-semibold text-yellow-800">Recent Alerts</h3>
-                {recentAlerts.map((a, idx) => (
-                  <p key={idx} className="text-yellow-700">{a.message} ({a.time})</p>
-                ))}
+
+              {/* Recent Alerts */}
+              <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                <h3 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+                  <span>⚠️</span>
+                  Recent Alerts
+                </h3>
+                <div className="space-y-2">
+                  {recentAlerts.map((a, idx) => (
+                    <div key={idx} className="bg-white p-2 rounded-lg">
+                      <p className="text-yellow-700 text-sm mb-1">{a.message}</p>
+                      <p className="text-yellow-600 text-xs">({a.time})</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setIsFullSafetyInfo(false)
+                setShowBottomPanel(false)
+              }}
+              className="mt-6 w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
 
       {/* Action Popup Modal */}
       {showPopup && selectedAction && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9000] p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -310,7 +389,19 @@ export default function Map() {
               </button>
             </div>
 
-            <p className="text-gray-600 mb-6">{selectedAction.description}</p>
+            <p className="text-gray-600 mb-4">{selectedAction.description}</p>
+            {selectedAction.label === 'Escort Me' && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Destination</label>
+                <input
+                  type="text"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="e.g., Library Block A"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
 
             <div className="flex gap-3">
               <button
@@ -321,9 +412,10 @@ export default function Map() {
               </button>
               <button
                 onClick={handleConfirm}
-                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+                disabled={submitting}
+                className={`flex-1 py-2 px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 ${submitting ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                Confirm
+                {submitting ? 'Sending...' : 'Confirm'}
               </button>
             </div>
           </div>

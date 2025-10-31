@@ -29,6 +29,8 @@ Use these pre-created accounts to test different user roles:
 3. **Click any account** to auto-fill the login form
 4. **Click "Login"** to test that role's features
 
+Note: Only Students can self-sign up. Staff and Security must log in with the preset credentials above.
+
 ## Role-Based Features
 
 ### Student Dashboard

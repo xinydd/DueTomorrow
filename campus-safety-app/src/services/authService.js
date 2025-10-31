@@ -79,6 +79,7 @@ class AuthService {
   // Login user
   async login(credentials) {
     try {
+      console.log('Attempting login to:', `${this.baseURL}/auth/login`);
       const response = await fetch(`${this.baseURL}/auth/login`, {
         method: 'POST',
         headers: {
@@ -87,7 +88,13 @@ class AuthService {
         body: JSON.stringify(credentials),
       })
 
-      const data = await response.json()
+      // Check if response is ok and parse JSON
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        throw new Error('Failed to parse server response. The server may be down.');
+      }
 
       if (!response.ok) {
         throw new Error(data.message || 'Login failed')
@@ -98,7 +105,11 @@ class AuthService {
 
       return data
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('Login error:', error);
+      // Provide more helpful error messages
+      if (error.message === 'Failed to fetch') {
+        throw new Error('Unable to connect to server. Please check your internet connection or try again later.');
+      }
       throw error
     }
   }

@@ -73,7 +73,7 @@ A comprehensive Node.js + Express backend for a Campus Safety App with real-time
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/signup` - User registration
+- `POST /api/auth/signup` - Student self-registration only (Staff/Security are login-only)
 - `POST /api/auth/login` - User login
 - `POST /api/auth/profile` - Get user profile
 
@@ -275,7 +275,7 @@ Test the API using tools like Postman or curl:
 # Health check
 curl http://localhost:3000/health
 
-# Signup
+# Signup (Students only)
 curl -X POST http://localhost:3000/api/auth/signup \
   -H "Content-Type: application/json" \
   -d '{"name":"John Doe","email":"john@example.com","password":"password123","role":"student"}'
@@ -329,6 +329,16 @@ curl -X POST http://localhost:3000/api/admin/simulation/start \
 curl -X POST http://localhost:3000/api/admin/simulation/stop \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
+
+## Preset Staff/Security Credentials (Demo)
+
+The system ships with demo accounts for testing. Staff and Security cannot self-register and must use their assigned credentials:
+
+- Staff: `sarah@staff.edu` / `staff123`
+- Security: `mike@security.edu` / `security123`
+- Student (example): `ahmad@student.edu` / `student123`
+
+To change these, edit `create-demo-accounts.js` and restart the backend.
 
 ## Deployment
 

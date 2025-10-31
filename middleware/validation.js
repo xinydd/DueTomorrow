@@ -15,8 +15,11 @@ const validateSignup = (req, res, next) => {
     errors.push('Password must be at least 6 characters long');
   }
 
+  // Only allow student role during self-signup; staff/security are admin-managed
   if (!role || !['student', 'staff', 'security'].includes(role)) {
     errors.push('Valid role (student/staff/security) is required');
+  } else if (role === 'staff' || role === 'security') {
+    errors.push('Only students can sign up. Staff/Security must log in with assigned accounts');
   }
 
   if (errors.length > 0) {

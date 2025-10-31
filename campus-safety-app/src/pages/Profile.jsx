@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSecurity } from '../state/SecurityContext.jsx'
+import EscortRequests from '../components/EscortRequests.jsx'
 
 import {
   User,
@@ -31,7 +32,7 @@ import {
 } from 'lucide-react'
 
 export default function Profile() {
-  const { user, logout } = useSecurity()
+  const { user, logout, hasRole } = useSecurity()
   const navigate = useNavigate()
   
   // Profile states
@@ -40,7 +41,7 @@ export default function Profile() {
   const [profilePic, setProfilePic] = useState(null)
 
   // Settings states
-  const [guardianMode, setGuardianMode] = useState(true)
+  const [guardianMode, setGuardianMode] = useState(false)
   const [autoShareLocation, setAutoShareLocation] = useState(true)
   const [quickSOS, setQuickSOS] = useState('shake')
   const [allowAnonymous, setAllowAnonymous] = useState(true)
@@ -61,6 +62,7 @@ export default function Profile() {
   const [showDataAccess, setShowDataAccess] = useState(false)
   const [showAboutUs, setShowAboutUs] = useState(false)
   const [showContactSupport, setShowContactSupport] = useState(false)
+  const [showEscortRequests, setShowEscortRequests] = useState(false)
 
   // Password form states
   const [currentPassword, setCurrentPassword] = useState('')
@@ -71,8 +73,23 @@ export default function Profile() {
   // Email form states
   const [newEmail, setNewEmail] = useState('')
   const [newPhone, setNewPhone] = useState('')
+  
+  // Block list state (persistent)
+  const [blockList, setBlockList] = useState([])
+  const [blockInput, setBlockInput] = useState('')
+
+  // Permission statuses for Data Access
+  const [permLocation, setPermLocation] = useState('unknown')
+  const [permCamera, setPermCamera] = useState('unknown')
+  const [permNotifications, setPermNotifications] = useState('unknown')
 
   const handleLogout = () => {
+    // Reset guardian mode on logout to avoid persisting across sessions
+    try {
+      localStorage.removeItem('campus-safety-guardian-mode')
+    } catch (e) {}
+    setGuardianMode(false)
+    setShowEscortRequests(false)
     logout()
     navigate('/login')
   }
@@ -95,8 +112,20 @@ export default function Profile() {
   }
 
   const handleManageGuardians = () => {
-    setGuardianMode(!guardianMode)
-    console.log('Guardian mode:', !guardianMode)
+    const newMode = !guardianMode
+    setGuardianMode(newMode)
+    console.log('Guardian mode:', newMode)
+    // Persist preference
+    try {
+      localStorage.setItem('campus-safety-guardian-mode', newMode.toString())
+    } catch (e) {}
+    
+    // If enabling guardian mode, show escort requests modal
+    if (newMode) {
+      setShowEscortRequests(true)
+    } else {
+      setShowEscortRequests(false)
+    }
   }
 
   const handleChangePassword = () => {
@@ -339,6 +368,8 @@ export default function Profile() {
   useEffect(() => {
     const savedLanguage = localStorage.getItem('campus-safety-language')
     const savedDarkMode = localStorage.getItem('campus-safety-darkmode')
+    const savedGuardianMode = localStorage.getItem('campus-safety-guardian-mode')
+    const savedBlockList = localStorage.getItem('campus-safety-blocklist')
 
     if (savedLanguage) {
       setLanguage(savedLanguage)
@@ -350,7 +381,91 @@ export default function Profile() {
       document.documentElement.classList.add('dark')
       document.body.classList.add('dark')
     }
+
+    if (savedGuardianMode === 'true') {
+      setGuardianMode(true)
+    }
+
+    if (savedBlockList) {
+      try { setBlockList(JSON.parse(savedBlockList)) } catch (e) {}
+    }
   }, [])
+
+  // Refresh permission statuses when opening Data Access
+  useEffect(() => {
+    if (!showDataAccess) return
+    const checkPermissions = async () => {
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const geo = await navigator.permissions.query({ name: 'geolocation' })
+          setPermLocation(geo.state)
+          geo.onchange = () => setPermLocation(geo.state)
+        } catch {}
+        try {
+          const cam = await navigator.permissions.query({ name: 'camera' })
+          setPermCamera(cam.state)
+          cam.onchange = () => setPermCamera(cam.state)
+        } catch {}
+        try {
+          if (typeof Notification !== 'undefined' && Notification.permission) {
+            setPermNotifications(Notification.permission)
+          }
+        } catch {}
+      } else {
+        // Fallback
+        if (typeof Notification !== 'undefined') setPermNotifications(Notification.permission || 'default')
+      }
+    }
+    checkPermissions()
+  }, [showDataAccess])
+
+  const persistBlockList = (list) => {
+    setBlockList(list)
+    try { localStorage.setItem('campus-safety-blocklist', JSON.stringify(list)) } catch (e) {}
+  }
+
+  const addToBlockList = () => {
+    const name = blockInput.trim()
+    if (!name) return
+    if (blockList.includes(name)) return
+    const updated = [...blockList, name]
+    persistBlockList(updated)
+    setBlockInput('')
+  }
+
+  const removeFromBlockList = (name) => {
+    const updated = blockList.filter(n => n !== name)
+    persistBlockList(updated)
+  }
+
+  const requestLocationPermission = async () => {
+    try {
+      await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) return reject(new Error('Geolocation not supported'))
+        navigator.geolocation.getCurrentPosition(() => resolve(), () => resolve())
+      })
+    } catch {}
+    setShowDataAccess(true) // keep open
+  }
+
+  const requestCameraPermission = async () => {
+    try {
+      if (navigator.mediaDevices?.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+        stream.getTracks().forEach(t => t.stop())
+      }
+    } catch {}
+    setShowDataAccess(true)
+  }
+
+  const requestNotificationPermission = async () => {
+    try {
+      if (typeof Notification !== 'undefined' && Notification.requestPermission) {
+        await Notification.requestPermission()
+      }
+    } catch {}
+    setShowDataAccess(true)
+  }
 
   return (
     <div className={`min-h-screen pb-20 transition-colors duration-200 ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
@@ -389,6 +504,7 @@ export default function Profile() {
                 }`} data-lang="editProfile">Edit Profile</span>
             </button>
 
+            {/* Guardian mode available for all roles */}
             <button
               onClick={handleManageGuardians}
               className={`flex items-center justify-center space-x-2 rounded-xl py-3 px-4 transition-colors ${guardianMode
@@ -1028,14 +1144,27 @@ export default function Profile() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <span className="text-gray-700">John Doe</span>
-                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">Unblock</button>
-                </div>
-                <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <span className="text-gray-700">Jane Smith</span>
-                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">Unblock</button>
-                </div>
+                {blockList.length === 0 ? (
+                  <div className="text-sm text-gray-500">No blocked users</div>
+                ) : (
+                  blockList.map((name) => (
+                    <div key={name} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                      <span className="text-gray-700">{name}</span>
+                      <button onClick={() => removeFromBlockList(name)} className="text-blue-600 hover:text-blue-700 text-sm font-medium">Unblock</button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                <input
+                  type="text"
+                  value={blockInput}
+                  onChange={(e) => setBlockInput(e.target.value)}
+                  placeholder="Enter name or email"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <button onClick={addToBlockList} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Block</button>
               </div>
 
               <button
@@ -1063,20 +1192,29 @@ export default function Profile() {
             <div className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Location Access</span>
-                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">Manage</button>
+                  <div>
+                    <span className="text-gray-700">Location Access</span>
+                    <span className="ml-2 text-xs text-gray-500">({permLocation})</span>
+                  </div>
+                  <button onClick={requestLocationPermission} className="text-blue-600 hover:text-blue-700 text-sm font-medium">Manage</button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Camera Access</span>
-                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">Manage</button>
+                  <div>
+                    <span className="text-gray-700">Camera Access</span>
+                    <span className="ml-2 text-xs text-gray-500">({permCamera})</span>
+                  </div>
+                  <button onClick={requestCameraPermission} className="text-blue-600 hover:text-blue-700 text-sm font-medium">Manage</button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Notifications</span>
-                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">Manage</button>
+                  <div>
+                    <span className="text-gray-700">Notifications</span>
+                    <span className="ml-2 text-xs text-gray-500">({permNotifications})</span>
+                  </div>
+                  <button onClick={requestNotificationPermission} className="text-blue-600 hover:text-blue-700 text-sm font-medium">Manage</button>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-700">Storage</span>
-                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">Manage</button>
+                  <a href="javascript:void(0)" onClick={() => alert('Storage permissions are managed by the browser. Clear site data in settings to revoke.')} className="text-blue-600 hover:text-blue-700 text-sm font-medium">Info</a>
                 </div>
               </div>
 
@@ -1174,6 +1312,13 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      {/* Escort Requests Modal */}
+      <EscortRequests
+        isOpen={showEscortRequests}
+        onClose={() => setShowEscortRequests(false)}
+        guardianMode={guardianMode}
+      />
     </div>
   )
 }

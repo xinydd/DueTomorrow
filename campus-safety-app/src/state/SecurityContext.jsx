@@ -122,6 +122,8 @@ export const SecurityProvider = ({ children }) => {
       const response = await authService.login(credentials)
       setUser(response.data.user)
       setIsAuthenticated(true)
+      // Reset session-scoped preferences
+      try { localStorage.removeItem('campus-safety-guardian-mode') } catch (e) {}
       return response
     } catch (error) {
       throw error
@@ -133,6 +135,8 @@ export const SecurityProvider = ({ children }) => {
       const response = await authService.signup(userData)
       setUser(response.data.user)
       setIsAuthenticated(true)
+      // Reset session-scoped preferences
+      try { localStorage.removeItem('campus-safety-guardian-mode') } catch (e) {}
       return response
     } catch (error) {
       throw error

@@ -179,7 +179,7 @@ export class LocationSharingService {
       
       // Create sharing options modal
       const modal = document.createElement('div');
-      modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+      modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[9998] p-4 overflow-y-auto';
       modal.innerHTML = `
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
           <div class="text-center mb-6">
@@ -287,7 +287,7 @@ export class LocationSharingService {
       
       // Show fallback options modal instead of just error
       const fallbackModal = document.createElement('div');
-      fallbackModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+      fallbackModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[9998] p-4 overflow-y-auto';
       fallbackModal.innerHTML = `
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
           <div class="text-center mb-6">
@@ -396,7 +396,7 @@ export class LocationSharingService {
   // Show manual location input modal
   static showManualLocationInput(customMessage = '') {
     const inputModal = document.createElement('div');
-    inputModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+    inputModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[9998] p-4 overflow-y-auto';
     inputModal.innerHTML = `
       <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
         <div class="text-center mb-6">
@@ -500,7 +500,7 @@ export class LocationSharingService {
   // Share location with specific coordinates
   static shareWithCoordinates(lat, lng, customMessage = '') {
     const sharingModal = document.createElement('div');
-    sharingModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+    sharingModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[9998] p-4 overflow-y-auto';
     sharingModal.innerHTML = `
       <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
         <div class="text-center mb-6">

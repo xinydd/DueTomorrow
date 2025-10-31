@@ -13,6 +13,14 @@ router.post('/signup', authLimiter, validateSignup, async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
+    // Enforce signup policy: only students can self-register
+    if (role === 'staff' || role === 'security') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only students can sign up. Staff and Security accounts are created by administrators. Please use Login with your assigned credentials.'
+      });
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -27,7 +35,8 @@ router.post('/signup', authLimiter, validateSignup, async (req, res) => {
       name,
       email,
       password,
-      role
+      // Force role to student for self-registrations
+      role: 'student'
     });
 
     await user.save();

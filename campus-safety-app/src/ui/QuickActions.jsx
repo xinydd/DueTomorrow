@@ -3,6 +3,7 @@ import { Share2, Route, Flag, X } from 'lucide-react'
 import LocationSharingService from '../services/locationSharingService'
 import ReportIncidentModal from '../components/ReportIncidentModal'
 import Toast from '../components/Toast'
+import authService from '../services/authService'
 
 const actions = [
   { 
@@ -32,6 +33,8 @@ export default function QuickActions() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState('success')
   const [showToast, setShowToast] = useState(false)
+  const [destination, setDestination] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const handleActionClick = (action) => {
     if (action.label === 'Report Incident') {
@@ -49,10 +52,46 @@ export default function QuickActions() {
         await LocationSharingService.showSharingOptions();
         setShowPopup(false)
         setSelectedAction(null)
+        setDestination('')
       } else {
-        alert(selectedAction.action)
-        setShowPopup(false)
-        setSelectedAction(null)
+        // Handle Escort request flow
+        if (selectedAction.label === 'Request Escort') {
+          try {
+            if (!destination.trim()) {
+              setToastMessage('Please enter your destination')
+              setToastType('error')
+              setShowToast(true)
+              return
+            }
+            setSubmitting(true)
+            const loc = await LocationSharingService.getCurrentLocation()
+            await authService.authenticatedRequest('/escort/request', {
+              method: 'POST',
+              body: JSON.stringify({
+                destination: destination.trim(),
+                location: { lat: loc.lat, lng: loc.lng }
+              })
+            })
+            setToastMessage('Escort request sent! Guardians notified.')
+            setToastType('success')
+            setShowToast(true)
+            setShowPopup(false)
+            setSelectedAction(null)
+            setDestination('')
+          } catch (error) {
+            console.error('Escort request failed:', error)
+            setToastMessage(error?.data?.message || 'Failed to send escort request')
+            setToastType('error')
+            setShowToast(true)
+          } finally {
+            setSubmitting(false)
+          }
+        } else {
+          alert(selectedAction.action)
+          setShowPopup(false)
+          setSelectedAction(null)
+          setDestination('')
+        }
       }
     }
   }
@@ -103,7 +142,19 @@ export default function QuickActions() {
               </button>
             </div>
             
-            <p className="text-gray-600 mb-6">{selectedAction.description}</p>
+            <p className="text-gray-600 mb-4">{selectedAction.description}</p>
+            {selectedAction.label === 'Request Escort' && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Destination</label>
+                <input
+                  type="text"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="e.g., Library Block A"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
             
             <div className="flex gap-3">
               <button 
@@ -114,9 +165,10 @@ export default function QuickActions() {
               </button>
               <button 
                 onClick={handleConfirm}
-                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+                disabled={submitting}
+                className={`flex-1 py-2 px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 ${submitting ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                Confirm
+                {submitting ? 'Sending...' : 'Confirm'}
               </button>
             </div>
           </div>

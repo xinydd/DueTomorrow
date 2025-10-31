@@ -384,7 +384,7 @@ export default function SimpleMapView() {
 
       {/* Weather */}
       {weatherData && (
-        <div className="absolute top-4 right-20 z-[1000]">
+        <div className="absolute top-4 right-12 z-[1000]">
           <div className="bg-white/90 backdrop-blur rounded-lg p-3 text-xs shadow-lg border border-gray-200">
             <div className="flex items-center gap-2">
               <span className="text-2xl">🌤️</span>
